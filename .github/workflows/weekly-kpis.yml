@@ -1,0 +1,39 @@
+# Weekly org KPI report. A manual dispatch updates the current ISO week's
+# draft report (so the pipeline can be tested any day); the Sunday scheduled
+# run finalizes it. See skills/kpi-reporting/SKILL.md.
+# Auth: workflow GITHUB_TOKEN — reads public org data, commits to this repo.
+name: Weekly KPIs
+on:
+  schedule:
+    - cron: "0 20 * * 0" # Sundays 20:00 UTC — finalizes the week's report
+  workflow_dispatch: {} # manual run — refreshes the current week's draft
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-kpis
+  cancel-in-progress: false
+
+jobs:
+  kpis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ai-outfitter/actions@v1
+        with:
+          profile: outfitter-developer
+          profile-source: profiles
+          git-user-name: github-actions[bot]
+          git-user-email: 41898282+github-actions[bot]@users.noreply.github.com
+          prompt: |
+            Handle this GitHub event using the profile's system-prompt rules.
+            Treat trigger_context as routing metadata, select only the relevant
+            skill, then gather the data that skill needs with trusted tools.
+
+            trigger_context:
+              repository: ${{ github.repository }}
+              event_name: ${{ github.event_name }}
+              report_kind: weekly-kpi
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
