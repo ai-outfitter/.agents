@@ -4,12 +4,11 @@ description: >-
   Shared ai-outfitter organization profile for agents working across our
   repositories — GitHub-triggered automation and internal development tasks.
 controls:
-  provider: github-models
-  # gpt-4.1-mini is chosen by observed compatibility, not preference
-  # (July 2026): it completes CI runs reliably on the included GitHub Models
-  # tier where gpt-5 429s and gpt-5-mini 500s/quota-exhausts. Swap the
-  # provider/model controls to a paid provider for heavier tasks.
-  model: openai/gpt-4.1-mini
+  # No provider/model pin: pi uses its Anthropic default when
+  # ANTHROPIC_API_KEY is present. GitHub Models is not an option here —
+  # models.github.ai returns 403 for enterprise-owned org repos in
+  # Unsupervised (verified 2026-07-10; there is no Models enablement
+  # surface at repo, org, or enterprise level).
   skills:
     - kpi-reporting
   append_system_prompt: |
