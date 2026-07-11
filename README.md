@@ -29,8 +29,11 @@ skill:
 - **Sunday's scheduled run** refreshes the numbers one last time and marks the
   report `final`.
 
-Reports land under [`reports/kpis/`](reports/kpis/). The workflow needs an
-`ANTHROPIC_API_KEY` Actions secret.
+Reports land under [`reports/kpis/`](reports/kpis/). Inference runs on
+[GitHub Models](https://docs.github.com/en/github-models) authenticated by the
+workflow's own token (`models: read`) — no API-key secrets required. To use a
+paid provider instead, change the profile's `provider`/`model` controls and
+pass the provider key as `env:` on the action step.
 
 ## Consuming this catalog
 

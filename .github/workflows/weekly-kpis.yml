@@ -1,7 +1,10 @@
 # Weekly org KPI report. A manual dispatch updates the current ISO week's
 # draft report (so the pipeline can be tested any day); the Sunday scheduled
 # run finalizes it. See skills/kpi-reporting/SKILL.md.
-# Auth: workflow GITHUB_TOKEN — reads public org data, commits to this repo.
+# Auth: workflow GITHUB_TOKEN — reads public org data, commits to this repo,
+# and authenticates inference via GitHub Models (`models: read`); no API-key
+# secrets required. To move to a paid provider instead, change the profile's
+# provider/model controls and pass e.g. ANTHROPIC_API_KEY as env on the step.
 name: Weekly KPIs
 on:
   schedule:
@@ -10,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  models: read
 
 concurrency:
   group: weekly-kpis
@@ -20,10 +24,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Configure GitHub Models provider for pi
+        run: |
+          mkdir -p "$HOME/.pi/agent"
+          cp .github/models.json "$HOME/.pi/agent/models.json"
+
       - uses: ai-outfitter/actions@v1
         with:
           profile: outfitter-developer
-          profile-source: profiles
+          # Absolute path: a bare relative path is written as-is into the
+          # runner's ~/.outfitter/settings.yml and resolves against the wrong
+          # root (see ai-outfitter/actions profile-source classification).
+          profile-source: ${{ github.workspace }}/profiles
           git-user-name: github-actions[bot]
           git-user-email: 41898282+github-actions[bot]@users.noreply.github.com
           prompt: |
@@ -35,5 +48,3 @@ jobs:
               repository: ${{ github.repository }}
               event_name: ${{ github.event_name }}
               report_kind: weekly-kpi
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

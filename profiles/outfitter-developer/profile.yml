@@ -4,6 +4,12 @@ description: >-
   Shared ai-outfitter organization profile for agents working across our
   repositories — GitHub-triggered automation and internal development tasks.
 controls:
+  provider: github-models
+  # gpt-4.1-mini is chosen by observed compatibility, not preference
+  # (July 2026): it completes CI runs reliably on the included GitHub Models
+  # tier where gpt-5 429s and gpt-5-mini 500s/quota-exhausts. Swap the
+  # provider/model controls to a paid provider for heavier tasks.
+  model: openai/gpt-4.1-mini
   skills:
     - kpi-reporting
   append_system_prompt: |
