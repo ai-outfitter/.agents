@@ -1,0 +1,190 @@
+{
+  "week": "2026-W28",
+  "since": "2026-07-06T00:00:00Z",
+  "generated_at": "2026-07-11T03:20:12Z",
+  "run_url": "https://github.com/ai-outfitter/.outfitter/actions/runs/29137813898",
+  "backfilled": false,
+  "repos": {
+    ".outfitter": {
+      "forks": 0,
+      "stars": 0,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 0,
+      "merged_prs": 0,
+      "commits": 26,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "default-profiles": {
+      "forks": 1,
+      "stars": 1,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 2,
+      "merged_prs": 1,
+      "commits": 1,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "community-profiles": {
+      "forks": 1,
+      "stars": 0,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 1,
+      "merged_prs": 1,
+      "commits": 2,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "actions": {
+      "forks": 0,
+      "stars": 1,
+      "watchers": 0,
+      "issues": 1,
+      "prs": 5,
+      "merged_prs": 6,
+      "commits": 13,
+      "releases_this_week": [
+        {
+          "name": "v1.0.0",
+          "published_at": "2026-07-09T02:52:50Z",
+          "tag": "v1.0.0"
+        }
+      ],
+      "unreleased": {
+        "latest_tag": "v1.0.0",
+        "commits_since_release": 2
+      },
+      "release_pr": {
+        "number": 9,
+        "title": "chore(main): release 1.1.0"
+      }
+    },
+    "outfitter": {
+      "forks": 2,
+      "stars": 9,
+      "watchers": 0,
+      "issues": 2,
+      "prs": 23,
+      "merged_prs": 17,
+      "commits": 17,
+      "releases_this_week": [
+        {
+          "name": "v0.10.0",
+          "published_at": "2026-07-10T23:31:03Z",
+          "tag": "v0.10.0"
+        },
+        {
+          "name": "v0.9.0",
+          "published_at": "2026-07-09T01:08:10Z",
+          "tag": "v0.9.0"
+        }
+      ],
+      "unreleased": {
+        "latest_tag": "v0.10.0",
+        "commits_since_release": 0
+      },
+      "release_pr": null
+    },
+    "deepwork": {
+      "forks": 1,
+      "stars": 1,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 2,
+      "merged_prs": 0,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": "v0.2.1",
+        "commits_since_release": 1
+      },
+      "release_pr": {
+        "number": 9,
+        "title": "chore(main): release 0.2.2"
+      }
+    },
+    ".github": {
+      "forks": 0,
+      "stars": 0,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 1,
+      "merged_prs": 0,
+      "commits": 2,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "ulta-tasklist": {
+      "forks": 0,
+      "stars": 0,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 0,
+      "merged_prs": 0,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "file-talk": {
+      "forks": 0,
+      "stars": 0,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 0,
+      "merged_prs": 0,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "bash-saver": {
+      "forks": 0,
+      "stars": 0,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 0,
+      "merged_prs": 0,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    }
+  },
+  "totals": {
+    "stars": 12,
+    "forks": 5,
+    "issues": 3,
+    "prs": 34,
+    "merged_prs": 25,
+    "commits": 61
+  }
+}

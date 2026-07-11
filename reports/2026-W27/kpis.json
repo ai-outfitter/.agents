@@ -1,0 +1,188 @@
+{
+  "week": "2026-W27",
+  "since": "2026-06-29T00:00:00Z",
+  "generated_at": "2026-07-11T03:21:11Z",
+  "run_url": "https://github.com/ai-outfitter/.outfitter/actions/runs/29137813898",
+  "backfilled": true,
+  "repos": {
+    ".outfitter": {
+      "stars": 0,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "default-profiles": {
+      "stars": null,
+      "forks": 1,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 8,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "community-profiles": {
+      "stars": null,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "actions": {
+      "stars": null,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 1,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "outfitter": {
+      "stars": null,
+      "forks": 2,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 35,
+      "releases_this_week": [
+        {
+          "name": "v0.8.0",
+          "published_at": "2026-07-02T22:32:32Z",
+          "tag": "v0.8.0"
+        },
+        {
+          "name": "v0.7.2",
+          "published_at": "2026-07-01T22:31:39Z",
+          "tag": "v0.7.2"
+        },
+        {
+          "name": "v0.7.1",
+          "published_at": "2026-07-01T22:01:03Z",
+          "tag": "v0.7.1"
+        },
+        {
+          "name": "v0.7.0",
+          "published_at": "2026-06-30T22:46:26Z",
+          "tag": "v0.7.0"
+        }
+      ],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "deepwork": {
+      "stars": null,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 1,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    ".github": {
+      "stars": null,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "ulta-tasklist": {
+      "stars": null,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 1,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "file-talk": {
+      "stars": null,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "bash-saver": {
+      "stars": null,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    }
+  },
+  "totals": {
+    "stars": 0,
+    "forks": 3,
+    "issues": null,
+    "prs": null,
+    "merged_prs": null,
+    "commits": 46
+  }
+}
