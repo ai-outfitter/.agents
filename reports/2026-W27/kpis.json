@@ -1,8 +1,8 @@
 {
   "week": "2026-W27",
   "since": "2026-06-29T00:00:00Z",
-  "generated_at": "2026-07-11T03:21:11Z",
-  "run_url": "https://github.com/ai-outfitter/.outfitter/actions/runs/29137813898",
+  "generated_at": "2026-07-11T03:24:02Z",
+  "run_url": null,
   "backfilled": true,
   "repos": {
     ".outfitter": {
@@ -21,7 +21,7 @@
       "release_pr": null
     },
     "default-profiles": {
-      "stars": null,
+      "stars": 1,
       "forks": 1,
       "watchers": null,
       "issues": null,
@@ -36,7 +36,7 @@
       "release_pr": null
     },
     "community-profiles": {
-      "stars": null,
+      "stars": 0,
       "forks": 0,
       "watchers": null,
       "issues": null,
@@ -51,7 +51,7 @@
       "release_pr": null
     },
     "actions": {
-      "stars": null,
+      "stars": 0,
       "forks": 0,
       "watchers": null,
       "issues": null,
@@ -66,7 +66,7 @@
       "release_pr": null
     },
     "outfitter": {
-      "stars": null,
+      "stars": 3,
       "forks": 2,
       "watchers": null,
       "issues": null,
@@ -101,8 +101,38 @@
       },
       "release_pr": null
     },
+    "autoimprove": {
+      "stars": 0,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 0,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
+    "link": {
+      "stars": 0,
+      "forks": 0,
+      "watchers": null,
+      "issues": null,
+      "prs": null,
+      "merged_prs": null,
+      "commits": 6,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
+      },
+      "release_pr": null
+    },
     "deepwork": {
-      "stars": null,
+      "stars": 1,
       "forks": 0,
       "watchers": null,
       "issues": null,
@@ -117,7 +147,7 @@
       "release_pr": null
     },
     ".github": {
-      "stars": null,
+      "stars": 0,
       "forks": 0,
       "watchers": null,
       "issues": null,
@@ -132,7 +162,7 @@
       "release_pr": null
     },
     "ulta-tasklist": {
-      "stars": null,
+      "stars": 0,
       "forks": 0,
       "watchers": null,
       "issues": null,
@@ -147,7 +177,7 @@
       "release_pr": null
     },
     "file-talk": {
-      "stars": null,
+      "stars": 0,
       "forks": 0,
       "watchers": null,
       "issues": null,
@@ -162,7 +192,7 @@
       "release_pr": null
     },
     "bash-saver": {
-      "stars": null,
+      "stars": 0,
       "forks": 0,
       "watchers": null,
       "issues": null,
@@ -178,11 +208,11 @@
     }
   },
   "totals": {
-    "stars": 0,
+    "stars": 5,
     "forks": 3,
     "issues": null,
     "prs": null,
     "merged_prs": null,
-    "commits": 46
+    "commits": 52
   }
 }

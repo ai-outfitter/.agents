@@ -42,10 +42,10 @@ echo "backfill week:$WEEK range:$SINCE..$CUTOFF org:$ORG"
 
 repos_json="{}"
 for r in $(gh repo list "$ORG" --limit 100 --json name,isArchived -q '.[]|select(.isArchived|not)|.name'); do
-  stars=$(gh api "repos/$ORG/$r/stargazers" -H "Accept: application/vnd.github.star+json" --paginate \
-    --jq "[.[] | select(.starred_at <= \"$CUTOFF\")] | length" 2>/dev/null | jq -s add 2>/dev/null || echo null)
-  forks=$(gh api "repos/$ORG/$r/forks?per_page=100" --paginate \
-    --jq "[.[] | select(.created_at <= \"$CUTOFF\")] | length" 2>/dev/null | jq -s add 2>/dev/null || echo null)
+  stars=$(gh api "repos/$ORG/$r/stargazers?per_page=100" -H "Accept: application/vnd.github.star+json" --paginate --slurp 2>/dev/null \
+    | jq "[.[][] | select(.starred_at <= \"$CUTOFF\")] | length" 2>/dev/null || echo null)
+  forks=$(gh api "repos/$ORG/$r/forks?per_page=100" --paginate --slurp 2>/dev/null \
+    | jq "[.[][] | select(.created_at <= \"$CUTOFF\")] | length" 2>/dev/null || echo null)
   commits=$(gh api "repos/$ORG/$r/commits?since=$SINCE&until=$CUTOFF&per_page=100" --jq length 2>/dev/null || echo null)
   releases=$(gh api "repos/$ORG/$r/releases?per_page=50" --jq "[.[] | select(.published_at >= \"$SINCE\" and .published_at <= \"$CUTOFF\") | {tag: .tag_name, name: .name, published_at}]" 2>/dev/null || echo '[]')
   stars=$(jval "${stars:-null}" null); forks=$(jval "${forks:-null}" null)
