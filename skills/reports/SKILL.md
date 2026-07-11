@@ -16,7 +16,9 @@ new report kind means adding a template under `assets/`, a collector under
 
 - Model requests are rate-limited (15/minute) and every tool call costs one:
   gather data with the flow's single collector script, not one command per
-  repository or metric. Aim for under 10 tool calls total.
+  repository or metric. Aim for under 10 tool calls total, and prefix every
+  shell command with `sleep 5 && ` so the run stays under the limit — a 429
+  kills the run outright.
 - Request bodies are capped at 8000 tokens, and every tool output you see is
   resent on each subsequent request: keep every tool output under ~40 short
   lines. Never print raw JSON responses.
