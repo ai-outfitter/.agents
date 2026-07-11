@@ -50,6 +50,11 @@ jobs:
             and push — then print a summary of what you did. If some data is
             inaccessible, note it in the report and continue; never stop to ask.
 
+            The deliverable is the org-wide weekly report file at
+            reports/kpis/<current ISO week>.md covering every ai-outfitter
+            repository, exactly as the kpi-reporting skill specifies. Do not
+            write any other file.
+
             trigger_context:
               repository: ${{ github.repository }}
               event_name: ${{ github.event_name }}

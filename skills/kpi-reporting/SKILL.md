@@ -34,22 +34,28 @@ IMPORTANT — two hard provider limits shape this workflow:
   to /dev/null or files). Never print raw JSON responses. Keep every tool
   output under ~40 short lines or the run dies with a 413.
 
-1. Compute the current ISO week id: `date -u +%G-W%V`. The report path is
-   `reports/kpis/<week-id>.md`. Read the existing report for this week and
-   the previous week (if present) in the same step.
-2. Run ONE script that loops over the organization's repositories and prints
-   a per-repo data table to stdout:
-   - enumerate with `gh repo list ai-outfitter --limit 100 --json name,stargazerCount,forkCount,isArchived`,
-     skipping archived repositories;
-   - per repo, via `gh api`: watchers/subscribers (`repos/ai-outfitter/<name>`),
-     open issues and open pull requests (separate PRs from issues), releases
-     published during the week, and commits on the default branch during the
-     week (`repos/.../commits?since=<monday>&per_page=100`);
-   - traffic (`repos/.../traffic/views`) requires push access; guard each
-     call with `|| true` and skip silently on 403 — never fail the run over
-     traffic data.
-3. Compute week-over-week deltas against the previous week's report totals
-   when that report exists.
+The report covers EVERY repository in the ai-outfitter organization, not just
+the repository you are running in. The report path is
+`reports/kpis/<week-id>.md` — never write anywhere else.
+
+1. Compute the current ISO week id: `date -u +%G-W%V`. Read the existing
+   report for this week and the previous week (if present) in the same step.
+2. Gather all data with exactly this script (one tool call):
+
+   ```bash
+   MONDAY=$(date -u -d "-$(( $(date -u +%u) - 1 )) days" +%Y-%m-%dT00:00:00Z)
+   for r in $(gh repo list ai-outfitter --limit 100 --json name,isArchived -q '.[]|select(.isArchived|not)|.name'); do
+     base=$(gh api repos/ai-outfitter/$r --jq '"stars:\(.stargazers_count) forks:\(.forks_count) watchers:\(.subscribers_count)"')
+     issues=$(gh api "search/issues?q=repo:ai-outfitter/$r+is:issue+is:open" --jq .total_count 2>/dev/null || echo "?")
+     prs=$(gh api "search/issues?q=repo:ai-outfitter/$r+is:pr+is:open" --jq .total_count 2>/dev/null || echo "?")
+     commits=$(gh api "repos/ai-outfitter/$r/commits?since=$MONDAY&per_page=100" --jq length 2>/dev/null || echo 0)
+     echo "$r $base issues:$issues prs:$prs commits_this_week:$commits"
+     sleep 1
+   done
+   ```
+
+3. Compute org totals and week-over-week deltas against the previous week's
+   report totals when that report exists.
 4. Write the report with this frontmatter, then per-repo and org-total tables:
 
    ```markdown
