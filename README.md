@@ -7,15 +7,18 @@ organization's repositories, plus the org automation built on them.
 ## Layout
 
 ```text
+weekly.md                       # pointer to the current week's report
 profiles/
   github-actions/profile.yml    # shared profile for CI-launched agents
 skills/
   reports/
     SKILL.md                    # routes trigger_context.report_kind to a flow
-    scripts/collect-weekly-kpis.sh
-    assets/weekly-kpi.md        # report template
+    scripts/                    # collect, backfill, render, publish
+    assets/template.weekly-report.md
 reports/
-  kpis/<YYYY>-W<WW>.md          # one report per ISO week
+  <YYYY>-W<WW>/
+    kpis.json                   # machine-readable weekly snapshot
+    report.md                   # rendered weekly status report
 .github/workflows/
   weekly-kpis.yml               # Sunday schedule + manual dispatch
 ```
@@ -29,14 +32,20 @@ reports/
 `reports` skill, which routes that kind to its flow, collector script, and
 template:
 
-- **Manual runs** (`workflow_dispatch`, any day) refresh the current ISO
+- **Manual runs** (`workflow_dispatch`, any day) regenerate the current ISO
   week's report as a `draft` — use this to test the pipeline.
-- **Sunday's scheduled run** refreshes the numbers one last time and marks the
-  report `final`.
+- **Sunday's scheduled run** regenerates one last time and marks the report
+  `final`.
 
-Reports land under [`reports/kpis/`](reports/kpis/). Adding a new report kind
-means a new template + collector + one routing bullet in the `reports` skill,
-and a workflow (or workflow input) that passes the new `report_kind`.
+Each week lands in `reports/<YYYY>-W<WW>/` as `kpis.json` (machine state,
+including release/merge activity and release-please status) plus `report.md`
+(rendered deterministically by `scripts/render-weekly-report.sh` — the agent
+writes only the Highlights paragraph). Root [`weekly.md`](weekly.md) always
+points at the current week. Week-over-week deltas come from the previous
+week's `kpis.json`; when it doesn't exist, `scripts/backfill-week.sh`
+reconstructs stars/forks/commits from timestamped data. Adding a new report
+kind means a new template + scripts + one routing bullet in the `reports`
+skill, and a workflow (or input) that passes the new `report_kind`.
 
 Inference uses the workflow's own token via GitHub Models (`models: read`) —
 no API-key secrets. The provider config points at the legacy endpoint
