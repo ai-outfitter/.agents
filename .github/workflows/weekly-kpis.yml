@@ -1,6 +1,6 @@
 # Weekly org KPI report. A manual dispatch updates the current ISO week's
 # draft report (so the pipeline can be tested any day); the Sunday scheduled
-# run finalizes it. See skills/kpi-reporting/SKILL.md.
+# run finalizes it. See skills/reports/SKILL.md (report_kind: weekly-kpi).
 # Auth: workflow GITHUB_TOKEN only — gh/git plus GitHub Models inference via
 # `models: read`. The provider config points at the legacy endpoint
 # models.inference.ai.azure.com because the new models.github.ai/inference
@@ -32,7 +32,7 @@ jobs:
 
       - uses: ai-outfitter/actions@v1
         with:
-          profile: outfitter-developer
+          profile: github-actions
           # Absolute path: a bare relative path is written as-is into the
           # runner's ~/.outfitter/settings.yml and resolves against the wrong
           # root (ai-outfitter/actions#14 fixes this).
@@ -49,11 +49,6 @@ jobs:
             the way through — gather the data, write the report, commit it,
             and push — then print a summary of what you did. If some data is
             inaccessible, note it in the report and continue; never stop to ask.
-
-            The deliverable is the org-wide weekly report file at
-            reports/kpis/<current ISO week>.md covering every ai-outfitter
-            repository, exactly as the kpi-reporting skill specifies. Do not
-            write any other file.
 
             trigger_context:
               repository: ${{ github.repository }}
