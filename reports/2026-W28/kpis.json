@@ -1,8 +1,8 @@
 {
   "week": "2026-W28",
   "since": "2026-07-06T00:00:00Z",
-  "generated_at": "2026-07-11T03:20:12Z",
-  "run_url": "https://github.com/ai-outfitter/.outfitter/actions/runs/29137813898",
+  "generated_at": "2026-07-11T03:27:49Z",
+  "run_url": "https://github.com/ai-outfitter/.outfitter/actions/runs/29138017930",
   "backfilled": false,
   "repos": {
     ".outfitter": {
@@ -12,7 +12,7 @@
       "issues": 0,
       "prs": 0,
       "merged_prs": 0,
-      "commits": 26,
+      "commits": 28,
       "releases_this_week": [],
       "unreleased": {
         "latest_tag": null,
@@ -185,6 +185,6 @@
     "issues": 3,
     "prs": 34,
     "merged_prs": 25,
-    "commits": 61
+    "commits": 63
   }
 }
