@@ -23,10 +23,16 @@ GitHub data. Reports live in this repository under
 
 ## Workflow
 
-IMPORTANT: model requests are rate-limited (15/minute), and every tool call
-costs one. Gather ALL repository data in a SINGLE shell script (one tool
-call), not one command per repository or metric. Aim for under 10 tool calls
-in the whole run.
+IMPORTANT — two hard provider limits shape this workflow:
+
+- Model requests are rate-limited (15/minute) and every tool call costs one:
+  gather ALL repository data in a SINGLE shell script (one tool call), not
+  one command per repository or metric. Aim for under 10 tool calls total.
+- Request bodies are capped at 8000 tokens, and every tool output you see is
+  resent on each subsequent request: the gathering script must print ONLY a
+  compact one-line-per-repo summary table (redirect all other command output
+  to /dev/null or files). Never print raw JSON responses. Keep every tool
+  output under ~40 short lines or the run dies with a 413.
 
 1. Compute the current ISO week id: `date -u +%G-W%V`. The report path is
    `reports/kpis/<week-id>.md`. Read the existing report for this week and
