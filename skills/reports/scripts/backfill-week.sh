@@ -10,6 +10,15 @@ WEEK="${1:?usage: backfill-week.sh <YYYY-Www>}"
 ORG="${ORG:-ai-outfitter}"
 ROOT=$(git rev-parse --show-toplevel)
 
+# Never clobber an existing snapshot: a committed baseline (possibly gathered
+# with a stronger token) beats a re-reconstruction. The Actions workflow token
+# cannot read stargazer timelines, so re-running backfill in CI would null
+# star counts.
+if [ -f "$ROOT/reports/$WEEK/kpis.json" ] && [ "${FORCE:-0}" != "1" ]; then
+  echo "reports/$WEEK/kpis.json already exists — skipping backfill (FORCE=1 to overwrite)"
+  exit 0
+fi
+
 YEAR=${WEEK%-W*}
 WNUM=${WEEK#*-W}
 # ISO week N's Monday: Jan 4 is always in week 1; step back to its Monday,
