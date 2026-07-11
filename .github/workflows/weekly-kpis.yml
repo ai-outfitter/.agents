@@ -44,6 +44,12 @@ jobs:
             Treat trigger_context as routing metadata, select only the relevant
             skill, then gather the data that skill needs with trusted tools.
 
+            This run is non-interactive: no one can answer questions. Do not
+            ask for confirmation at any point. Carry the skill's workflow all
+            the way through — gather the data, write the report, commit it,
+            and push — then print a summary of what you did. If some data is
+            inaccessible, note it in the report and continue; never stop to ask.
+
             trigger_context:
               repository: ${{ github.repository }}
               event_name: ${{ github.event_name }}

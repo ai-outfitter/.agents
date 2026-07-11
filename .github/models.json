@@ -11,6 +11,11 @@
       },
       "models": [
         {
+          "id": "gpt-4.1",
+          "name": "GPT-4.1 (GitHub Models, legacy endpoint)",
+          "reasoning": false
+        },
+        {
           "id": "gpt-4.1-mini",
           "name": "GPT-4.1 mini (GitHub Models, legacy endpoint)",
           "reasoning": false
