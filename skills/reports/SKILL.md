@@ -42,11 +42,18 @@ The deliverable is `reports/kpis/<YYYY>-W<WW>.md` — never write anywhere else.
 
 ### Flow
 
+The collector and template live beside this SKILL.md, NOT in your working
+directory. Resolve the skill directory first and use it for both:
+
+```bash
+SKILL_DIR=$(dirname "$(find "$PWD" /tmp "$HOME" -path '*reports/SKILL.md' -print -quit 2>/dev/null)")
+```
+
 1. Compute the current ISO week id: `date -u +%G-W%V`. Read the existing
    report for this week and the previous week (if present), plus the template
-   `assets/weekly-kpi.md`, in the same step.
-2. Run the collector, `scripts/collect-weekly-kpis.sh` (one tool call). It
-   prints one compact line per repository.
+   `$SKILL_DIR/assets/weekly-kpi.md`, in the same step.
+2. Run the collector, `bash $SKILL_DIR/scripts/collect-weekly-kpis.sh` (one
+   tool call). It prints one compact line per repository.
 3. Fill the template: per-repo table rows from the collector output, org
    totals summed from them, week-over-week deltas against the previous week's
    report totals when that report exists (otherwise `—`).
