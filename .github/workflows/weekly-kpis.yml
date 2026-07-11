@@ -1,9 +1,10 @@
 # Weekly org KPI report. A manual dispatch updates the current ISO week's
 # draft report (so the pipeline can be tested any day); the Sunday scheduled
 # run finalizes it. See skills/kpi-reporting/SKILL.md.
-# Auth: workflow GITHUB_TOKEN for gh/git; inference needs the
-# ANTHROPIC_API_KEY repo secret (GitHub Models 403s in this enterprise's
-# org repos, so the no-secret path is unavailable).
+# Auth: workflow GITHUB_TOKEN only — gh/git plus GitHub Models inference via
+# `models: read`. The provider config points at the legacy endpoint
+# models.inference.ai.azure.com because the new models.github.ai/inference
+# gateway 403s Actions tokens from enterprise-owned org repos.
 name: Weekly KPIs
 on:
   schedule:
@@ -12,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  models: read
 
 concurrency:
   group: weekly-kpis
@@ -22,6 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Configure GitHub Models provider for pi
+        run: |
+          mkdir -p "$HOME/.pi/agent"
+          cp .github/models.json "$HOME/.pi/agent/models.json"
+
       - uses: ai-outfitter/actions@v1
         with:
           profile: outfitter-developer
@@ -40,5 +48,3 @@ jobs:
               repository: ${{ github.repository }}
               event_name: ${{ github.event_name }}
               report_kind: weekly-kpi
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

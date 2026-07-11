@@ -4,11 +4,14 @@ description: >-
   Shared ai-outfitter organization profile for agents working across our
   repositories — GitHub-triggered automation and internal development tasks.
 controls:
-  # No provider/model pin: pi uses its Anthropic default when
-  # ANTHROPIC_API_KEY is present. GitHub Models is not an option here —
-  # models.github.ai returns 403 for enterprise-owned org repos in
-  # Unsupervised (verified 2026-07-10; there is no Models enablement
-  # surface at repo, org, or enterprise level).
+  provider: github-models
+  # Runs on the workflow token, no secrets. The provider config
+  # (.github/models.json) points at the LEGACY endpoint
+  # models.inference.ai.azure.com: the new models.github.ai/inference
+  # gateway 403s Actions tokens from enterprise-owned org repos, while the
+  # legacy endpoint and the catalog both return 200 (probed 2026-07-10,
+  # run 29132941546). gpt-4.1-mini is chosen by observed CI compatibility.
+  model: gpt-4.1-mini
   skills:
     - kpi-reporting
   append_system_prompt: |
