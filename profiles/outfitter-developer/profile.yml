@@ -10,9 +10,9 @@ controls:
   # models.inference.ai.azure.com: the new models.github.ai/inference
   # gateway 403s Actions tokens from enterprise-owned org repos, while the
   # legacy endpoint and the catalog both return 200 (probed 2026-07-10,
-  # run 29132941546). gpt-4.1 over -mini: the high rate-limit tier completes
-  # multi-step gh gathering where mini stalls and asks questions.
-  model: gpt-4.1
+  # run 29132941546). gpt-4.1-mini specifically: full gpt-4.1 rejects pi's
+  # launch payload on the free tier ("Max size: 8000 tokens", run 29133285094).
+  model: gpt-4.1-mini
   skills:
     - kpi-reporting
   append_system_prompt: |
