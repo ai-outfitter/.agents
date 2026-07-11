@@ -23,24 +23,28 @@ GitHub data. Reports live in this repository under
 
 ## Workflow
 
+IMPORTANT: model requests are rate-limited (15/minute), and every tool call
+costs one. Gather ALL repository data in a SINGLE shell script (one tool
+call), not one command per repository or metric. Aim for under 10 tool calls
+in the whole run.
+
 1. Compute the current ISO week id: `date -u +%G-W%V`. The report path is
-   `reports/kpis/<week-id>.md`.
-2. Enumerate the organization's repositories:
-   `gh repo list ai-outfitter --limit 100 --json name,visibility,stargazerCount,forkCount,isArchived`.
-   Skip archived repositories.
-3. For each repository, gather with `gh api` (all public-API data):
-   - stars, forks, watchers/subscribers (`repos/ai-outfitter/<name>`)
-   - open issues and open pull requests (`search/issues` counts or
-     `repos/.../issues?state=open` — separate PRs from issues)
-   - releases published during the week
-   - commits on the default branch during the week
-     (`repos/.../commits?since=<monday>&until=<now>`)
-4. Traffic (views/clones, `repos/.../traffic/views`) requires push access on
-   each repository; attempt it, and skip silently per-repo on 403 — do not
-   fail the run over traffic data.
-5. If the previous ISO week's report exists, read its totals and include
-   week-over-week deltas.
-6. Write the report with this frontmatter, then per-repo and org-total tables:
+   `reports/kpis/<week-id>.md`. Read the existing report for this week and
+   the previous week (if present) in the same step.
+2. Run ONE script that loops over the organization's repositories and prints
+   a per-repo data table to stdout:
+   - enumerate with `gh repo list ai-outfitter --limit 100 --json name,stargazerCount,forkCount,isArchived`,
+     skipping archived repositories;
+   - per repo, via `gh api`: watchers/subscribers (`repos/ai-outfitter/<name>`),
+     open issues and open pull requests (separate PRs from issues), releases
+     published during the week, and commits on the default branch during the
+     week (`repos/.../commits?since=<monday>&per_page=100`);
+   - traffic (`repos/.../traffic/views`) requires push access; guard each
+     call with `|| true` and skip silently on 403 — never fail the run over
+     traffic data.
+3. Compute week-over-week deltas against the previous week's report totals
+   when that report exists.
+4. Write the report with this frontmatter, then per-repo and org-total tables:
 
    ```markdown
    ---
@@ -50,8 +54,9 @@ GitHub data. Reports live in this repository under
    ---
    ```
 
-7. Commit only the report file with the message
-   `kpi: <week-id> report (<draft|final>)` and push to `main`.
+5. Commit only the report file with the message
+   `kpi: <week-id> report (<draft|final>)` and push to `main` — write the
+   file, `git add`, `git commit`, and `git push` in one tool call.
 
 ## Boundaries
 
