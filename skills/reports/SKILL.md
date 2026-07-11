@@ -49,18 +49,18 @@ directory. Resolve the skill directory first and use it for both:
 SKILL_DIR=$(dirname "$(find "$PWD" /tmp "$HOME" -path '*reports/SKILL.md' -print -quit 2>/dev/null)")
 ```
 
-1. Compute the current ISO week id (`date -u +%G-W%V`) and the Actions run
-   URL (`echo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"`
-   — empty parts mean you are not in Actions; then omit the link). Read the
-   existing report for this week and the previous week (if present), plus the
-   template `$SKILL_DIR/assets/weekly-kpi.md`, in the same step.
+1. Compute the current ISO week id (`date -u +%G-W%V`). Read the existing
+   report for this week and the previous week (if present), plus the template
+   `$SKILL_DIR/assets/weekly-kpi.md`, in the same step.
 2. Run the collector, `bash $SKILL_DIR/scripts/collect-weekly-kpis.sh` (one
    tool call). It prints one compact line per repository.
 3. Fill the template: per-repo table rows from the collector output, org
-   totals summed from them, week-over-week deltas against the previous week's
-   report totals when that report exists (otherwise `—`), and the Actions run
-   link in `generated_by` and the footer so every report traces back to the
-   job that produced it.
+   totals summed from them, and week-over-week deltas against the previous
+   week's report totals when that report exists (otherwise `—`). Copy the
+   collector's `generated_at` and `run_url` values VERBATIM into the
+   frontmatter and the footer link, so every report traces back to the job
+   that produced it (when `run_url:none`, omit the `generated_by` key and the
+   footer line).
 4. Write `reports/kpis/<week-id>.md`, then `git add`, `git commit -m
    "kpi: <week-id> report (<draft|final>)"`, and `git push` in one tool call.
 

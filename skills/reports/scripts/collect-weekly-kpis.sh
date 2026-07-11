@@ -9,6 +9,12 @@ MONDAY=$(date -u -d "-$(( $(date -u +%u) - 1 )) days" +%Y-%m-%dT00:00:00Z 2>/dev
   || date -u -v-$(( $(date -u +%u) - 1 ))d +%Y-%m-%dT00:00:00Z)
 
 echo "week:$(date -u +%G-W%V) since:$MONDAY org:$ORG"
+echo "generated_at:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+if [ -n "${GITHUB_RUN_ID:-}" ]; then
+  echo "run_url:${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+else
+  echo "run_url:none"
+fi
 
 for r in $(gh repo list "$ORG" --limit 100 --json name,isArchived -q '.[]|select(.isArchived|not)|.name'); do
   base=$(gh api "repos/$ORG/$r" --jq '"stars:\(.stargazers_count) forks:\(.forks_count) watchers:\(.subscribers_count)"' 2>/dev/null || echo "stars:? forks:? watchers:?")
