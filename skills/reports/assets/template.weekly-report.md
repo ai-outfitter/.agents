@@ -38,8 +38,10 @@ releases shipped, merged PR volume, unreleased buildup, notable deltas.}}
 
 ## Activity
 
-- **{{repo}}** — released {{tags}} — {{n}} PRs merged this week — {{n}}
-  unreleased commits since {{tag}} — release PR #{{n}} open
+- **{{repo}}** — {{n}} PRs merged this week — {{n}} unreleased commits since
+  {{tag}} — release PR #{{n}} open
+  - released [{{tag}}]({{release URL}})
+    - {{release-note bullet (per-commit changelog entry, max 6 per release)}}
   {{(only repos with activity; only the clauses that apply)}}
 
 Notes:

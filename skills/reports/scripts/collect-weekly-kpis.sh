@@ -33,7 +33,7 @@ for r in $(gh repo list "$ORG" --limit 100 --json name,isArchived -q '.[]|select
   prs=$(gh api "search/issues?q=repo:$ORG/$r+is:pr+is:open" --jq .total_count 2>/dev/null || echo null)
   merged=$(gh api "search/issues?q=repo:$ORG/$r+is:pr+is:merged+merged:>=${MONDAY%T*}" --jq .total_count 2>/dev/null || echo null)
   commits=$(gh api "repos/$ORG/$r/commits?since=$MONDAY&per_page=100" --jq length 2>/dev/null || echo 0)
-  releases=$(gh api "repos/$ORG/$r/releases?per_page=20" --jq "[.[] | select(.published_at >= \"$MONDAY\") | {tag: .tag_name, name: .name, published_at}]" 2>/dev/null || echo '[]')
+  releases=$(gh api "repos/$ORG/$r/releases?per_page=20" --jq "[.[] | select(.published_at >= \"$MONDAY\") | {tag: .tag_name, name: .name, published_at, url: .html_url, body: (.body // \"\")}]" 2>/dev/null || echo '[]')
   # gh api prints error bodies to stdout, so extract the tag from the raw
   # response instead of trusting exit status.
   latest_tag=$(gh api "repos/$ORG/$r/releases/latest" 2>/dev/null | jq -r '.tag_name // empty' 2>/dev/null || true)

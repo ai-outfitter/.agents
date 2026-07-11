@@ -97,15 +97,18 @@ jq -r --argjson prev "$PREV_JSON" --argjson prev_backfilled "$PREV_BACKFILLED" -
       or (.value.release_pr != null)))) as $active |
     if ($active | length) == 0 then "_No release or merge activity this week._"
     else $active[] |
-      "- **\(.key)**" +
-      (if ((.value.releases_this_week // []) | length) > 0
-        then " — released \([.value.releases_this_week[].tag] | join(", "))" else "" end) +
+      ("- **\(.key)**" +
       (if (.value.merged_prs // 0) > 0
         then " — \(.value.merged_prs) PR\(if .value.merged_prs == 1 then "" else "s" end) merged this week" else "" end) +
       (if (.value.unreleased.commits_since_release // 0) > 0
         then " — \(.value.unreleased.commits_since_release) unreleased commit\(if .value.unreleased.commits_since_release == 1 then "" else "s" end) since \(.value.unreleased.latest_tag)" else "" end) +
       (if .value.release_pr != null
-        then " — release PR #\(.value.release_pr.number) open" else "" end)
+        then " — release PR #\(.value.release_pr.number) open" else "" end)),
+      (.value.releases_this_week // [] | .[] |
+        (if .url then "  - released [\(.tag)](\(.url))" else "  - released \(.tag)" end),
+        ((.body // "") | split("\n") | map(gsub("\r$"; ""))
+          | map(select(startswith("* ") or startswith("- ")))
+          | .[0:6][] | "    \(sub("^\\* "; "- "))"))
     end),
   ""
 ' "$CUR"

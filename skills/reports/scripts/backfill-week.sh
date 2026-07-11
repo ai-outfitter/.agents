@@ -47,7 +47,7 @@ for r in $(gh repo list "$ORG" --limit 100 --json name,isArchived -q '.[]|select
   forks=$(gh api "repos/$ORG/$r/forks?per_page=100" --paginate --slurp 2>/dev/null \
     | jq "[.[][] | select(.created_at <= \"$CUTOFF\")] | length" 2>/dev/null || echo null)
   commits=$(gh api "repos/$ORG/$r/commits?since=$SINCE&until=$CUTOFF&per_page=100" --jq length 2>/dev/null || echo null)
-  releases=$(gh api "repos/$ORG/$r/releases?per_page=50" --jq "[.[] | select(.published_at >= \"$SINCE\" and .published_at <= \"$CUTOFF\") | {tag: .tag_name, name: .name, published_at}]" 2>/dev/null || echo '[]')
+  releases=$(gh api "repos/$ORG/$r/releases?per_page=50" --jq "[.[] | select(.published_at >= \"$SINCE\" and .published_at <= \"$CUTOFF\") | {tag: .tag_name, name: .name, published_at, url: .html_url, body: (.body // \"\")}]" 2>/dev/null || echo '[]')
   stars=$(jval "${stars:-null}" null); forks=$(jval "${forks:-null}" null)
   commits=$(jval "${commits:-null}" null); releases=$(jval "${releases:-[]}" '[]')
 
