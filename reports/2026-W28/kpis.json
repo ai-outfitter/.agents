@@ -1,39 +1,27 @@
 {
   "week": "2026-W28",
   "since": "2026-07-06T00:00:00Z",
-  "generated_at": "2026-07-11T03:35:46Z",
-  "run_url": "https://github.com/ai-outfitter/.outfitter/actions/runs/29138238428",
+  "generated_at": "2026-07-12T20:16:38Z",
+  "run_url": "https://github.com/ai-outfitter/.outfitter/actions/runs/29207392116",
   "backfilled": false,
   "repos": {
-    ".outfitter": {
-      "forks": 0,
-      "stars": 0,
-      "watchers": 0,
-      "issues": 0,
-      "prs": 0,
-      "merged_prs": 0,
-      "commits": 31,
-      "releases_this_week": [],
-      "unreleased": {
-        "latest_tag": null,
-        "commits_since_release": null
-      },
-      "release_pr": null
-    },
     "default-profiles": {
       "forks": 1,
       "stars": 1,
       "watchers": 0,
       "issues": 0,
       "prs": 2,
-      "merged_prs": 1,
-      "commits": 1,
+      "merged_prs": 3,
+      "commits": 3,
       "releases_this_week": [],
       "unreleased": {
         "latest_tag": null,
         "commits_since_release": null
       },
-      "release_pr": null
+      "release_pr": {
+        "number": 9,
+        "title": "chore(main): release 1.0.0"
+      }
     },
     "community-profiles": {
       "forks": 1,
@@ -41,23 +29,26 @@
       "watchers": 0,
       "issues": 0,
       "prs": 1,
-      "merged_prs": 1,
-      "commits": 2,
+      "merged_prs": 3,
+      "commits": 4,
       "releases_this_week": [],
       "unreleased": {
         "latest_tag": null,
         "commits_since_release": null
       },
-      "release_pr": null
+      "release_pr": {
+        "number": 3,
+        "title": "chore(main): release 1.0.0"
+      }
     },
     "actions": {
       "forks": 0,
       "stars": 1,
       "watchers": 0,
       "issues": 1,
-      "prs": 5,
-      "merged_prs": 6,
-      "commits": 13,
+      "prs": 6,
+      "merged_prs": 8,
+      "commits": 15,
       "releases_this_week": [
         {
           "body": "## 1.0.0 (2026-07-09)\r\n\r\n\r\n### Features\r\n\r\n* initial Outfitter GitHub Action with token-scoping docs ([f5b8e99](https://github.com/ai-outfitter/actions/commit/f5b8e9913cf35bfe67522c70c136fe1e70ee84b7))\r\n* Merge pull request [#2](https://github.com/ai-outfitter/actions/issues/2) from ai-outfitter/docs/github-models ([7101c9e](https://github.com/ai-outfitter/actions/commit/7101c9e092a7282cc3a7579f2289b4ba041c127c))\r\n* Merge pull request [#3](https://github.com/ai-outfitter/actions/issues/3) from ai-outfitter/feat/validate-triage-script ([62876b5](https://github.com/ai-outfitter/actions/commit/62876b52e0477f5d2754c11638d53548c8fab7e1))\r\n* validate-triage.sh — assert a triage agent's side effects via gh ([8626a94](https://github.com/ai-outfitter/actions/commit/8626a9465170fd14c0f87f52a9147f9f2545ce46))\r\n* validate-triage.sh — assert triage side effects via gh ([62876b5](https://github.com/ai-outfitter/actions/commit/62876b52e0477f5d2754c11638d53548c8fab7e1))\r\n\r\n\r\n### Bug Fixes\r\n\r\n* **ci:** use RELEASE_PLEASE_TOKEN so release-please can open PRs ([066d07e](https://github.com/ai-outfitter/actions/commit/066d07e59945f1ffa72b182561561bc1d08951e1))\r\n* **ci:** use RELEASE_PLEASE_TOKEN so release-please can open PRs ([ed2c7f6](https://github.com/ai-outfitter/actions/commit/ed2c7f62807dcac586da762712462500ef750766))",
@@ -69,7 +60,7 @@
       ],
       "unreleased": {
         "latest_tag": "v1.0.0",
-        "commits_since_release": 2
+        "commits_since_release": 4
       },
       "release_pr": {
         "number": 9,
@@ -78,12 +69,12 @@
     },
     "outfitter": {
       "forks": 2,
-      "stars": 9,
+      "stars": 11,
       "watchers": 0,
       "issues": 2,
-      "prs": 23,
-      "merged_prs": 17,
-      "commits": 17,
+      "prs": 24,
+      "merged_prs": 18,
+      "commits": 18,
       "releases_this_week": [
         {
           "body": "## [0.10.0](https://github.com/ai-outfitter/outfitter/compare/v0.9.0...v0.10.0) (2026-07-10)\n\n\n### Features\n\n* **run:** show the active profile in the pi TUI status line ([#145](https://github.com/ai-outfitter/outfitter/issues/145)) ([5015067](https://github.com/ai-outfitter/outfitter/commit/5015067bc8afa0ae13f1ae868018339b71f636eb))\n* **skills:** implement catalog skill selection and reference materialization ([#155](https://github.com/ai-outfitter/outfitter/issues/155)) ([e26f73c](https://github.com/ai-outfitter/outfitter/commit/e26f73ccafefc7c5f0bbad5fc09feed02e3faf52)), closes [#149](https://github.com/ai-outfitter/outfitter/issues/149)\n* **skills:** publish the bundled outfitter self-docs skill to pi and claude launches ([#154](https://github.com/ai-outfitter/outfitter/issues/154)) ([0998e14](https://github.com/ai-outfitter/outfitter/commit/0998e143e6baebcc6617860800aa32142bb63bd1))",
@@ -102,7 +93,25 @@
       ],
       "unreleased": {
         "latest_tag": "v0.10.0",
-        "commits_since_release": 0
+        "commits_since_release": 1
+      },
+      "release_pr": {
+        "number": 160,
+        "title": "chore(main): release 0.11.0"
+      }
+    },
+    ".outfitter": {
+      "forks": 0,
+      "stars": 0,
+      "watchers": 0,
+      "issues": 0,
+      "prs": 0,
+      "merged_prs": 0,
+      "commits": 32,
+      "releases_this_week": [],
+      "unreleased": {
+        "latest_tag": null,
+        "commits_since_release": null
       },
       "release_pr": null
     },
@@ -186,11 +195,11 @@
     }
   },
   "totals": {
-    "stars": 12,
+    "stars": 14,
     "forks": 5,
     "issues": 3,
-    "prs": 34,
-    "merged_prs": 25,
-    "commits": 66
+    "prs": 36,
+    "merged_prs": 32,
+    "commits": 74
   }
 }

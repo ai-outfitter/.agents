@@ -1,6 +1,6 @@
 # Weekly status
 
-Current week: **2026-W28** (draft)
+Current week: **2026-W28** (final)
 
 - [Report](reports/2026-W28/report.md)
 - [KPI data](reports/2026-W28/kpis.json)
