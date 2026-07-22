@@ -20,9 +20,7 @@ reports/
     kpis.json                   # machine-readable weekly snapshot
     report.md                   # rendered weekly status report
 .github/workflows/
-  ci.yml                        # validates deterministic automation
   weekly-kpis.yml               # Sunday schedule + manual dispatch
-  dependabot-merge-queue.yml    # preview/rebase/queue Dependabot PRs
 ```
 
 ## Weekly KPIs
@@ -75,53 +73,4 @@ Actions, point `ai-outfitter/actions` at it:
   with:
     profile: github-actions
     profile-source: ai-outfitter/.outfitter
-```
-
-## Dependabot merge queue
-
-[`dependabot-merge-queue.yml`](.github/workflows/dependabot-merge-queue.yml)
-is a manual, deterministic controller for one `ai-outfitter` repository at a
-time. It discovers every open, non-draft Dependabot PR targeting the default
-branch (or uses an explicit ordered list), rebases every selected branch that is
-behind, verifies that the entire batch is current, and only then submits the
-clean batch directly to that repository's merge queue in the requested order.
-Conflicting, ineligible, or failing PRs stop the batch before any PR is queued.
-A preview is the default; turn on the `execute` input to apply it.
-
-Each target repository needs these one-time prerequisites:
-
-1. Enable **Allow auto-merge** and configure a merge queue on the exact default
-   branch, with required checks and no queue jumping.
-2. Add the `merge_group` `checks_requested` event to every required Actions
-   workflow so the queue's temporary merge groups receive CI results.
-3. Install the organization GitHub App with repository **Contents: read and
-   write** and **Pull requests: read and write** permissions. Expose its app ID
-   as `OUTFITTER_APP_ID` and private key as `OUTFITTER_APP_PRIVATE_KEY` to this
-   repository's Actions runs.
-
-The workflow uses the App token because GitHub's built-in `GITHUB_TOKEN` cannot
-add PRs to a merge queue. It runs only from this repository's default branch,
-checks out no target-repository or PR code, serializes runs per target, verifies
-the queue before making changes, and pins every enqueue request to the
-post-rebase head commit.
-
-GitHub has no atomic multi-PR enqueue API, so the final queue insertions are a
-tight ordered sequence. If an insertion fails after an earlier one succeeds,
-the workflow reports the partial result. Rerunning the same batch is safe:
-existing queue entries are detected and left in place.
-
-The same preview can be run locally with an authenticated GitHub CLI:
-
-```sh
-node .github/scripts/queue-dependabot-prs.mjs \
-  --repository ai-outfitter/outfitter
-```
-
-Pass an explicit batch and execute it after reviewing the preview:
-
-```sh
-node .github/scripts/queue-dependabot-prs.mjs \
-  --repository ai-outfitter/outfitter \
-  --pull-requests "193,196" \
-  --execute
 ```
