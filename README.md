@@ -19,6 +19,9 @@ reports/
   <YYYY>-W<WW>/
     kpis.json                   # machine-readable weekly snapshot
     report.md                   # rendered weekly status report
+docs/
+  personas/                     # org review personas (data) for reviewing Outfitter
+    roles/, individuals/        # kind: role / kind: individual, run via community-profiles' reviewer
 .github/workflows/
   weekly-kpis.yml               # Sunday schedule + manual dispatch
 ```
@@ -53,6 +56,16 @@ no API-key secrets. The provider config points at the legacy endpoint
 gateway rejects Actions tokens from enterprise-owned org repos (HTTP 403).
 Free-tier limits shape the skill: 15 model requests/minute and 8000-token
 request bodies, hence one batched collector script and compact tool output.
+
+## Review personas
+
+[`docs/personas/`](docs/personas/) holds the org's shared platform persona
+(`platform-engineer` / `theo-alvarez`) for reviewing Outfitter's own docs,
+onboarding, and CLI from a target user's viewpoint. The persona docs are data;
+the review method is the `reviewer` agent + `persona-review` skill in
+[`ai-outfitter/community-profiles`](https://github.com/ai-outfitter/community-profiles).
+See [`docs/personas/README.md`](docs/personas/README.md) for the field schema and
+how to run a one-off review.
 
 ## Consuming this catalog
 
