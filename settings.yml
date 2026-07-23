@@ -1,0 +1,8 @@
+# Org-default Outfitter settings for ai-outfitter contributors. Consume this
+# repo as a source (or via remote_settings) — see README.md.
+default_harness: pi
+sources:
+  - github: ai-outfitter/default-profiles
+    ref: v1.0.0
+  - github: ai-outfitter/community-profiles
+    ref: v1.0.0
