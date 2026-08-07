@@ -1,0 +1,556 @@
+{
+  "report_version": "1",
+  "generated_at": "2026-08-07T20:05:00Z",
+  "scope": {
+    "kind": "org",
+    "name": "ai-outfitter",
+    "forge": "github",
+    "repos_surveyed": 17,
+    "repos_total": 17,
+    "includes_private": true,
+    "sampling_note": "No sampling: all 17 org repos surveyed (under the ~30-repo cap). GitHub `benchmarks` was renamed to `evals`; the local checkout at ~/repos/ai-outfitter/benchmarks tracks it. The local-only `pensieve` directory has no remote and is out of scope."
+  },
+  "maturity": {
+    "level": 2,
+    "rationale": "The org can consistently claim level 2 (delegated): 11 of 17 repos carry root agent instruction files, the org ships a pinned shared catalog (.agents settings.yml pinning default-profiles and community-profiles at v1.0.0), and the merged-PR cadence (median 29 minutes from open to merge across 154 PRs in 90 days) reflects local-agent-authored PRs with human merge. Five repos (outfitter, wiki, community-profiles, default-profiles, evals) already run level-3 automation — issue-triggered triage agents, nightly/weekly scheduled agents, and transcript capture as CI artifacts — but that is a strong pilot cluster, not the org norm: 12 of 17 repos have no CI agent workflow, only outfitter has required checks, agent review, and a merge queue, and session capture outside those workflows was not found.",
+    "next_rung_blockers": [
+      "ai-outfitter/actions@v1 is incompatible with outfitter >=1.0.0; wiki workflows invoke the CLI directly as a workaround (nightly-wiki.yml comment, forge API) — v2 must ship before the triage/agent workflow pattern can roll out further",
+      "The issue-triage skill is duplicated (outfitter/.outfitter/profiles/github-actions/skills/issue-triage vs community-profiles/skills/issue-triage) instead of consumed from the pinned catalog",
+      "Only outfitter has branch rulesets (required status checks, merge queue, automatic Copilot review); every other surveyed repo returned 404 Branch not protected, and the wiki scheduled agent pushes ingest commits directly to main",
+      "Session transcripts live only as per-run CI workflow artifacts, which expire; no durable org-owned audit record found beyond reports committed to the wiki repo"
+    ]
+  },
+  "repos": [
+    {
+      "name": "outfitter",
+      "default_branch": "main",
+      "maturity_level": 3,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": false,
+        "docs_quality": "strong"
+      },
+      "automation": {
+        "ci_agent_workflows": true,
+        "entry_points": ["issue", "manual"],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": true,
+        "adversarial_review": true,
+        "required_checks": true
+      },
+      "session_capture": {
+        "captured": "partial",
+        "store": "CI workflow artifacts; transcript link appended to the agent's triage comment (issue-triage.yml, forge API)"
+      },
+      "notes": "Flagship: issue-triage.yml runs the repo's own github-actions profile on GitHub Models, validates side effects with a SHA-pinned script, and links the transcript artifact; .deepreview defines adversarial review of release workflows; active rulesets add required status checks, a merge queue, and automatic Copilot code review (forge API). 63 files under docs/ (tree listing). Agent profile ships in-repo (.outfitter/profiles/github-actions) rather than from the shared catalog."
+    },
+    {
+      "name": "wiki",
+      "default_branch": "main",
+      "maturity_level": 3,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md", "CLAUDE.md"],
+        "dotagents_tree": true,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": true,
+        "entry_points": ["schedule", "manual"],
+        "preview_environments": false,
+        "ci_smoke_tests": false
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "partial",
+        "store": "CI workflow artifacts (pi --export transcripts) plus generated reports committed to the repo (nightly-wiki.yml, weekly-kpis.yml, forge API)"
+      },
+      "notes": "Agent-maintained private repo: nightly wiki-maintainer run (ingest-or-lint, lint findings as PRs, never self-merged) and weekly KPI report; .agents/ tree defines reporter and wiki-maintainer agents and a reports skill (forge API + local checkout). Ingest commits push directly to unprotected main."
+    },
+    {
+      "name": "community-profiles",
+      "default_branch": "main",
+      "maturity_level": 3,
+      "context_layer": {
+        "instruction_files": [],
+        "dotagents_tree": false,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": true,
+        "entry_points": ["issue"],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "partial",
+        "store": "CI workflow artifacts via ai-outfitter/actions@v2 (issue-triage.yml, forge API)"
+      },
+      "notes": "Shared skill catalog (browser-mcp, issue-triage, media-editor per tree listing) with issue-triage automation on GitHub Models and skill-tests CI that executes each skill's test scripts on push and PR (forge API). Pinned as a source at v1.0.0 by the org .agents settings.yml."
+    },
+    {
+      "name": "default-profiles",
+      "default_branch": "main",
+      "maturity_level": 3,
+      "context_layer": {
+        "instruction_files": [],
+        "dotagents_tree": false,
+        "docs_quality": "thin"
+      },
+      "automation": {
+        "ci_agent_workflows": true,
+        "entry_points": ["issue"],
+        "preview_environments": false,
+        "ci_smoke_tests": false
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "partial",
+        "store": "CI workflow artifacts via ai-outfitter/actions (issue-triage.yml, forge API)"
+      },
+      "notes": "Default Outfitter profile catalog; issue-triage automation mirrors community-profiles. Pinned as a source at v1.0.0 by the org .agents settings.yml. 44-line README plus 2 docs files (local checkout, tree listing)."
+    },
+    {
+      "name": "evals",
+      "default_branch": "main",
+      "maturity_level": 3,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": false,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": true,
+        "entry_points": ["manual"],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "partial",
+        "store": "Verified eval reports optionally committed under reports/evals/<run-id> (fixture-eval.yml, forge API)"
+      },
+      "notes": "Attested agent-benchmark fixture: workflow_dispatch runs a pinned outfitter version against GitHub Models with digest-pinned evaluator image and SHA-pinned action ref, preflight auth smoke test, and optional committed reports (forge API). Renamed from `benchmarks`; local checkout at ~/repos/ai-outfitter/benchmarks."
+    },
+    {
+      "name": "actions",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": [],
+        "dotagents_tree": false,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": false
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "The GitHub Action that runs Outfitter profiles headless in CI — the enabler of the org's agent workflows, and provider of the shared validate-triage.sh script other repos pin by SHA. Carries .outfitter/skills/outfitter-actions (tree listing). Only workflow is release-please. v1 is incompatible with outfitter >=1.0.0 (wiki workflow comments, forge API)."
+    },
+    {
+      "name": "agent-operator",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": true,
+        "docs_quality": "strong"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": false
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Kubernetes operator for resident-agent primitives; README states design stage — CRDs and controller specified but not implemented (forge API). Publishes a controller image via release-images.yml. .agents/ tree carries a researcher agent plus source-ingest and wiki skills (tree listing); 23 docs files including architecture, requirements, and runbooks (local checkout). Renamed from link-operator (owner-root AGENTS.md, local)."
+    },
+    {
+      "name": "channels",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": [],
+        "dotagents_tree": false,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Pi extension pushing channel events (email/Slack/Signal/GitHub) into agent sessions — an agent entry-point product, developed with standard ci/release workflows. 416-line README plus 10 docs files (local checkout, tree listing)."
+    },
+    {
+      "name": "deepwork",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": true,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Pi extension package; .agents/plugins/marketplace.json only (tree listing). Standard ci/release workflows."
+    },
+    {
+      "name": "chapters",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": true,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Private repo; chapters skill exists both at skills/chapters and .agents/skills/chapters within the repo (tree listing). 10 docs files (tree listing)."
+    },
+    {
+      "name": "link",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": false,
+        "docs_quality": "strong"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": false
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Private mission-KPI product repo. AGENTS.md imports docs/mission.md and directs the repo's .outfitter/settings.yml at the remote default-profiles catalog (local checkout). 21 docs files: mission, requirements traced to KPIs, architecture (local checkout)."
+    },
+    {
+      "name": "autoimprove",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": [],
+        "dotagents_tree": false,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "SkillOpt-style recursive skill-improvement loop for markdown skills — level-5 subject matter, but the repo itself runs only ci.yml. 213-line README plus 3 docs files (local checkout, tree listing)."
+    },
+    {
+      "name": ".agents",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md", "CLAUDE.md"],
+        "dotagents_tree": false,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": false
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "The org catalog: org-wide AGENTS.md conventions and settings.yml pinning default-profiles and community-profiles at v1.0.0, default_harness pi (forge API). Formerly .outfitter; its weekly KPI automation moved to the wiki repo (README, forge API). This report is its first reports/ content."
+    },
+    {
+      "name": "ulta-tasklist",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": false,
+        "docs_quality": "thin"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Pi extension package; ci.yml only (tree listing)."
+    },
+    {
+      "name": "file-talk",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": false,
+        "docs_quality": "thin"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Pi extension package; ci.yml only (tree listing). No pushes since 2026-06-05 (inventory)."
+    },
+    {
+      "name": "bash-saver",
+      "default_branch": "main",
+      "maturity_level": 2,
+      "context_layer": {
+        "instruction_files": ["AGENTS.md"],
+        "dotagents_tree": false,
+        "docs_quality": "adequate"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": true
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Pi extension package; ci.yml only (tree listing). No pushes since 2026-06-05 (inventory)."
+    },
+    {
+      "name": ".github",
+      "default_branch": "main",
+      "maturity_level": 1,
+      "context_layer": {
+        "instruction_files": [],
+        "dotagents_tree": false,
+        "docs_quality": "thin"
+      },
+      "automation": {
+        "ci_agent_workflows": false,
+        "entry_points": [],
+        "preview_environments": false,
+        "ci_smoke_tests": false
+      },
+      "review_posture": {
+        "agent_review": false,
+        "adversarial_review": false,
+        "required_checks": false
+      },
+      "session_capture": {
+        "captured": "none-found",
+        "store": null
+      },
+      "notes": "Org profile boilerplate: README.md and profile/README.md only (tree listing). No agent context of its own; level reflects absence of evidence in this repo, not org practice."
+    }
+  ],
+  "harnesses": [
+    {
+      "name": "pi",
+      "evidence": "observed",
+      "surfaces": ["local", "ci"]
+    },
+    {
+      "name": "outfitter (profile manager over pi)",
+      "evidence": "observed",
+      "surfaces": ["local", "ci"]
+    },
+    {
+      "name": "claude-code",
+      "evidence": "observed",
+      "surfaces": ["local"]
+    }
+  ],
+  "models": {
+    "multi_llm": true,
+    "vendors": ["github-models", "openai", "anthropic", "github-copilot"],
+    "routing_and_spend_notes": "CI issue-triage and the evals fixture run on GitHub Models authenticated by the workflow GITHUB_TOKEN (`models: read`) — explicitly no API keys (workflow comments, forge API). The wiki repo's scheduled agents use a dedicated OpenAI API key repo secret (OPENAI_API_KEY_AI_OUTFITTER_WIKI). Outfitter's ruleset adds automatic Copilot code review. Anthropic usage is local (CLAUDE.md files and symlinks in checkouts); no vendor dashboards were inspected, so actual spend routing is not verified."
+  },
+  "governance": {
+    "audit_record": "scattered",
+    "session_data_ownership": "partial",
+    "shared_catalogs": [
+      { "repo": "ai-outfitter/.agents", "pinned": true },
+      { "repo": "ai-outfitter/default-profiles", "pinned": true },
+      { "repo": "ai-outfitter/community-profiles", "pinned": true }
+    ]
+  },
+  "duplication": [
+    {
+      "description": "issue-triage skill and workflow reimplemented per repo instead of consumed from the pinned catalog: outfitter carries its own copy under .outfitter/profiles/github-actions/skills/issue-triage while community-profiles publishes skills/issue-triage; default-profiles runs a third near-identical issue-triage.yml workflow.",
+      "repos": ["outfitter", "community-profiles", "default-profiles"],
+      "evidence": "Tree listings and workflow contents via forge API: outfitter/.outfitter/profiles/github-actions/skills/issue-triage/SKILL.md, community-profiles/skills/issue-triage/SKILL.md, and .github/workflows/issue-triage.yml in all three repos"
+    },
+    {
+      "description": "Wiki tooling exists twice: agent-operator ships .agents/skills/wiki (with wiki-cli script and tests) while the wiki repo defines its own wiki-maintainer agent with wiki-ingest/wiki-lint/wiki-query/wiki-setup skills.",
+      "repos": ["agent-operator", "wiki"],
+      "evidence": "Tree listings via forge API: agent-operator/.agents/skills/wiki/ and wiki/.agents/agents/wiki-maintainer/skills/"
+    }
+  ],
+  "metrics": {
+    "pr_cycle_time_days_median": 0.02,
+    "pr_rework_rate": 0.247,
+    "window_days": 90,
+    "notes": "GraphQL over merged PRs per repo, bounded to the last 90 days or last 50 merged PRs, whichever is smaller: 154 merged PRs in window across the org. Median open-to-merge cycle 0.02 days (about 29 minutes), consistent with agent-authored PRs merged promptly by a human. Rework rate defined as the fraction of merged PRs with at least one review thread (38/154); 32.5% of merged PRs had at least one review. outfitter hit the 50-PR cap, so its 90-day activity may be undercounted."
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "title": "Consolidate the duplicated issue-triage and wiki skills into the pinned catalogs",
+      "rationale": "issue-triage exists in three repos (outfitter's in-repo profile copy, community-profiles' catalog copy, default-profiles' workflow) and wiki tooling exists in two (agent-operator vs the wiki repo's wiki-maintainer). One catalog entry consumed via the already-pinned .agents/community-profiles sources beats N private reimplementations, needs no new capability, and makes the next workflow rollout a one-line source reference.",
+      "target_level": 3,
+      "effort": "low"
+    },
+    {
+      "priority": 2,
+      "title": "Ship ai-outfitter/actions@v2 and roll the proven issue-triage workflow to the remaining active repos",
+      "rationale": "The triage workflow is already proven end to end in three repos — trigger, agent run, side-effect validation, transcript artifact — but v1 of the action is incompatible with outfitter >=1.0.0, forcing the wiki repo to invoke the CLI directly. Fixing the action unblocks copying the one proven workflow (not new ones) to channels, deepwork, agent-operator, actions, and evals, which is exactly the automate-one-workflow-before-generalizing step the ramp calls for.",
+      "target_level": 3,
+      "effort": "medium"
+    },
+    {
+      "priority": 3,
+      "title": "Extend required checks and agent review beyond outfitter, starting with repos agents push to",
+      "rationale": "outfitter is the only repo with rulesets (required status checks, merge queue, automatic Copilot review); every other repo's main returned 404 Branch not protected, and the wiki nightly agent pushes ingest commits directly to main. Level 3 requires adversarial review as a pipeline step; replicating outfitter's ruleset shape to the repos that already run agent workflows closes the gap where it matters most.",
+      "target_level": 3,
+      "effort": "low"
+    },
+    {
+      "priority": 4,
+      "title": "Make session capture durable before merge, not just per-run",
+      "rationale": "Transcripts exist only as CI workflow artifacts (which expire) plus links on triage comments; the wiki repo's committed reports are the only durable record. Routing transcript exports into a permanent org-owned store — the wiki repo is the natural home — turns scattered artifacts into the audit record that level 3 requires before merge and that later evals (level 5) will feed on.",
+      "target_level": 3,
+      "effort": "medium"
+    }
+  ],
+  "evidence_limits": [
+    "Local checkouts were up to two months behind origin (bash-saver, file-talk at 2026-06-05), so workflow, CI, and protection facts were taken from the forge API; instruction-file and docs reads from locals may lag the remote.",
+    "Branch-protection reads returned 404 (not protected) for every repo except outfitter; org-level rulesets and org settings (Copilot policies, Models enablement) were not inspected beyond per-repo ruleset queries.",
+    "Local-only practice is invisible to this scan: 'no session capture found' for local harness sessions means none was found in repos or workflows, not that sessions are not kept elsewhere.",
+    "Vendor dashboards (OpenAI usage, GitHub Models quotas, Copilot licensing) were not inspected; model routing and spend claims come from workflow comments and config files only.",
+    "PR metrics cap at the last 50 merged PRs per repo; outfitter hit that cap, so org totals in the 90-day window are a lower bound.",
+    "agent-operator's cluster runtime is design-stage per its README; no running cluster, deployed resident agent, or channel relay was inspected.",
+    ".agents and .github were scanned via the forge API only until the .agents clone for this report; the local-only 'pensieve' directory has no remote and was excluded.",
+    "The org has 154 merged PRs in 90 days from effectively one engineer's harness sessions; level-2 daily practice is inferred from PR cadence and org-wide harness config, not from observing sessions."
+  ]
+}
