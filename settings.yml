@@ -5,4 +5,4 @@ sources:
   - github: ai-outfitter/default-profiles
     ref: v1.0.0
   - github: ai-outfitter/community-profiles
-    ref: v1.0.0
+    ref: v1.1.0
