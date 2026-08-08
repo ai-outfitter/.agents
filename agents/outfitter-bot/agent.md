@@ -1,6 +1,6 @@
 ---
 name: outfitter-bot
-description: The ai-outfitter organization's resident agent — works feature-request issues end to end: explore, implement on a semantic branch, open a PR referencing the issue.
+description: "The ai-outfitter organization's resident agent — works feature-request issues end to end: explore, implement on a semantic branch, open a PR referencing the issue."
 tools: {allow: [read, grep, glob, edit, write, bash]}
 extensions:
   # channels v1.6.1 (A2A task plane) by its release commit: tag v1.6.1 =
