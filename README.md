@@ -7,7 +7,9 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   follow across the org's repositories.
 - [`settings.yml`](settings.yml) — org-default Outfitter settings: harness and
   the pinned catalog sources (default-profiles, community-profiles).
-- Shared contributor agents and skills land here as they emerge; broader
+- [`agents/outfitter-bot`](agents/outfitter-bot/agent.md) — the org's resident
+  agent: works issues assigned to it into reviewed pull requests.
+- More shared contributor agents and skills land here as they emerge; broader
   catalogs live in
   [default-profiles](https://github.com/ai-outfitter/default-profiles) and
   [community-profiles](https://github.com/ai-outfitter/community-profiles).
