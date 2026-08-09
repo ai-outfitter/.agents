@@ -85,7 +85,7 @@
       "type": "array",
       "minItems": 1,
       "items": {
-        "enum": ["open-pr", "comment", "request-review", "merge", "push-protected", "manage-labels"]
+        "enum": ["open-issue", "open-pr", "comment", "assign", "review", "request-review", "merge", "push-protected", "manage-labels"]
       }
     }
   }
