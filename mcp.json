@@ -15,6 +15,16 @@
       ],
       "lifecycle": "keep-alive",
       "requestTimeoutMs": 30000
+    },
+    "github-write": {
+      "command": "github-mcp-server",
+      "args": [
+        "stdio",
+        "--tools",
+        "get_me,issue_read,search_issues,get_file_contents,add_issue_comment,list_pull_requests,create_pull_request"
+      ],
+      "lifecycle": "keep-alive",
+      "requestTimeoutMs": 30000
     }
   }
 }
