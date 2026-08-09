@@ -1,7 +1,9 @@
 ---
 name: outfitter-bot
 description: "The ai-outfitter organization's resident agent — works feature-request issues end to end: explore, implement on a semantic branch, open a PR referencing the issue."
-tools: {allow: [read, grep, glob, edit, write, bash]}
+tools: {allow: [read, grep, glob, edit, write, bash, mcp]}
+mcp:
+  - github-write
 extensions:
   # channels v1.6.1 (A2A task plane) by its release commit: tag v1.6.1 =
   # 03fb6d2, the current main tip. The relay wire protocol is unversioned,
@@ -18,7 +20,9 @@ extensions:
 3. Explore the issue and repository until you can name the files you will change, then stop exploring.
 4. Implement the change on a semantic `<type>/<slug>` branch (`feat/dark-mode`) with conventional commits.
 5. Validate with the repository's own checks. Do not push until they pass.
-6. Push the branch and open a pull request that references the issue.
+6. Push the branch with git over HTTPS, authenticated with your own credential.
+   Open a pull request that references the issue through the `github-write` MCP
+   server.
 
 ## Always
 
