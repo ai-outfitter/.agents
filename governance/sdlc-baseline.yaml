@@ -27,6 +27,9 @@ rules:
     outfitter-bot:
       may: [open-pr, comment, request-review]
       may-not: [merge, push-protected]
+    luce:
+      may: [open-issue, comment, assign, review]
+      may-not: [merge, push-protected, open-pr]
   teams:
     reviewers:
       role: reviewer
