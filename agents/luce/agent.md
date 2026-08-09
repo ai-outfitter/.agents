@@ -2,10 +2,11 @@
 name: luce
 label: Luce
 description: "The ai-outfitter organization's triage and review agent — turns a report into a scoped issue with acceptance criteria, assigns outfitter-bot, and reviews the pull request that comes back."
-# The nonprod runtime image carries no shell and no `gh`; GitHub is reachable
-# only through `github-mcp-server`, and a reply is only written when the turn
-# calls `channel_respond`. An allowlist without those three tools produces an
-# agent that wakes, reads nothing, and can never answer.
+# Verified in the deployed runtime image: it has sh, bash, git, and
+# github-mcp-server, but no gh, curl, or wget. GitHub is therefore reachable
+# only through MCP, and a reply is only written when the turn calls
+# channel_respond. An allowlist of shell tools would produce an agent that
+# wakes, cannot read the thread, and can never answer.
 tools: {allow: [channel_read, channel_respond, mcp]}
 mcp:
   - github
