@@ -1,8 +1,14 @@
 # Org-default Outfitter settings for ai-outfitter contributors. Consume this
 # repo as a source (or via remote_settings) — see README.md.
+#
+# community-profiles is the only source. default-profiles was removed: it also
+# ships an `actions-agent`, and being listed first its version won by
+# resolution order — a general-purpose agent described as doing "reviews,
+# triage, and implementation work". Triage runs got that one, and it
+# implemented a fix on an issue rather than labelling it. The agent here is
+# scoped to `skills: [issue-triage]`, which is what a triage workflow should
+# resolve.
 default_harness: pi
 sources:
-  - github: ai-outfitter/default-profiles
-    ref: v1.0.0
   - github: ai-outfitter/community-profiles
-    ref: v1.1.0
+    ref: v1.2.1
