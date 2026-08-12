@@ -20,13 +20,31 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
 
 ## Using it
 
-Link this repo as a source in your own `.agents/settings.yml` (or `~/.agents/settings.yml`):
+Inside the ai-outfitter org, declare this repo unpinned as the repo's ONLY
+source in `.agents/settings.yml`:
+
+```yaml
+sources:
+  - github: ai-outfitter/.agents
+```
+
+In workflows that use `ai-outfitter/actions`, also pass
+`source: ai-outfitter/.agents` on the action step — a repo with its own
+`.agents/` otherwise skips `outfitter sync` and never fetches this catalog.
+
+See [Catalog sources](AGENTS.md#catalog-sources) for the org-wide rule.
+
+Outside the org, pin this repo in `.agents/settings.yml` (or
+`~/.agents/settings.yml`):
 
 ```yaml
 sources:
   - github: ai-outfitter/.agents
     ref: <tag-or-commit>
 ```
+
+You don't own this catalog; leaving it unpinned runs whatever is published
+next.
 
 ## History
 
