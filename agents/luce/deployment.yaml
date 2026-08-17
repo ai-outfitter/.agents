@@ -1,0 +1,95 @@
+# Luce's fleet declaration. deploy-catalog globs agents/*/deployment.yaml, so
+# this file's existence is what puts Luce in the fleet, and CI renders
+# __REVISION__ with the merge commit that produced it: the profile beside this
+# file and the revision the cluster resolves are the same commit by
+# construction.
+#
+# Bootstrap is an administrator's, not CI's: the agent-luce namespace, the
+# luce-forge Secret, and the luce-runtime ConfigMap must exist before the
+# first deploy, and the deploy role needs luce in its resourceNames. See
+# agents/luce/README.md.
+apiVersion: aioutfitter.com/v1alpha1
+kind: Organization
+metadata:
+  name: ai-outfitter
+spec:
+  displayName: AI Outfitter
+  agentCatalogs:
+    # Public catalog: it resolves anonymously, so no catalog credential and no
+    # private-catalog setup step. The name must match the workflow's
+    # catalog-source input, which is what convergence is checked against.
+    - name: ai-outfitter-agents
+      github: ai-outfitter/.agents
+      revision: __REVISION__
+---
+apiVersion: aioutfitter.com/v1alpha1
+kind: Agent
+metadata:
+  name: luce
+spec:
+  memberships:
+    - organization: ai-outfitter
+  profile:
+    agent: luce
+    harness: pi
+  credentials:
+    # GITHUB_NOTIFY_TOKEN (classic, notifications scope only), GITHUB_TOKEN
+    # (fine-grained, this org only), and LUCE_GITHUB_LOGIN.
+    - secret: luce-forge
+      as: env
+    # AgentSpec has no env field: non-secret runtime environment reaches the
+    # container as a ConfigMap projected through EnvFrom, the same path as the
+    # Secret.
+    - configMap: luce-runtime
+      as: env
+  setup:
+    # Luce pushes its feature branch with git over HTTPS: the runtime image has
+    # git but no gh, curl, or wget. GIT_ASKPASS answers the credential prompt
+    # from the environment, so the token never lands on disk and never appears
+    # in a remote URL or in .git/config.
+    - name: git-https-credential
+      script: |
+        set -eu
+        umask 077
+
+        test -n "${GITHUB_TOKEN:?GITHUB_TOKEN must be supplied by luce-forge}"
+        test -n "${LUCE_GITHUB_LOGIN:?LUCE_GITHUB_LOGIN must be supplied by luce-forge}"
+
+        askpass="${HOME}/.git-askpass"
+        cat >"$askpass" <<'ASKPASS'
+        #!/bin/sh
+        case "$1" in
+          *[Uu]sername*) printf '%s\n' "$LUCE_GITHUB_LOGIN" ;;
+          *[Pp]assword*) printf '%s\n' "$GITHUB_TOKEN" ;;
+        esac
+        ASKPASS
+        chmod 0700 "$askpass"
+
+        git config --global core.askPass "$askpass"
+        # No credential helper: askPass is the only source, so a stale or wrong
+        # token fails instead of silently reusing a cached one.
+        git config --global credential.helper ''
+  workspace:
+    resourceQuota:
+      hard:
+        requests.cpu: "2"
+        requests.memory: 4Gi
+        limits.cpu: "4"
+        limits.memory: 8Gi
+        requests.storage: 40Gi
+        persistentvolumeclaims: "4"
+        count/pods: "10"
+        count/jobs.batch: "20"
+        count/services: "5"
+        count/configmaps: "20"
+        count/secrets: "10"
+    limitRange:
+      container:
+        defaultRequest:
+          cpu: 100m
+          memory: 256Mi
+        default:
+          cpu: "1"
+          memory: 2Gi
+    volume:
+      size: 10Gi

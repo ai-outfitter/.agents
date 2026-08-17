@@ -1,0 +1,61 @@
+# Deploy the fleet this catalog declares, on merge to main.
+#
+# The revision is github.sha — the merge commit itself — so the profile that
+# merged and the revision the cluster resolves are the same commit by
+# construction. There is no separate "bump the pin" step to forget.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "agents/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+# One deploy at a time, and never cancel one midway: an interrupted apply
+# leaves the fleet pinned to a revision nothing finished converging on.
+concurrency:
+  group: deploy-catalog
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # This repository is public. The environment is what keeps a fork or an
+    # unreviewed push from reaching the cluster role, and it holds every
+    # cluster-identifying value so none of them appear in this file.
+    environment: fleet
+    steps:
+      - uses: actions/checkout@v6
+
+      # Identity is the one genuinely per-deployment part, so the action does
+      # not establish it — it only asserts what the identity can and cannot do.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Point kubectl at the fleet
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ vars.EKS_CLUSTER_NAME }}" \
+            --region "${{ vars.AWS_REGION }}"
+
+      # Pinned to a full commit SHA, not a tag: no agent-operator release
+      # containing this action exists yet, and there is deliberately no
+      # floating major tag before 1.0 because release-please puts breaking
+      # changes in minor bumps. Bump this to the merge commit of
+      # ai-outfitter/agent-operator#43 (per-agent converge budget) once it
+      # lands.
+      - uses: ai-outfitter/agent-operator/actions/deploy-catalog@466dac2d3b80f419f34463dbf82b899454885e95
+        with:
+          revision: ${{ github.sha }}
+          # Must match spec.agentCatalogs[].name in the Organization that
+          # agents/*/deployment.yaml declares. Convergence is checked against
+          # the revision an Agent resolved for this source by name.
+          catalog-source: ai-outfitter-agents
