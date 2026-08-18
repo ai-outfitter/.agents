@@ -91,6 +91,22 @@ gh api /repos/ai-outfitter/<repo>/rules/branches/main --jq '[.[].type]'
 `pull_request` in that list means a direct push is refused and a pull request
 is the only way in.
 
+Protection is **per repository**, so it has to hold on every repository Luce
+works — a new one starts unprotected. Audit the whole organization before
+widening what she is assigned:
+
+```sh
+gh repo list ai-outfitter --limit 100 --json name --jq '.[].name' | while read -r r; do
+  printf '%s: %s\n' "$r" \
+    "$(gh api "/repos/ai-outfitter/$r/rules/branches/main" --jq '[.[].type] | join(",")' 2>/dev/null)"
+done
+```
+
+An empty result is an unprotected default branch. An organization-level
+ruleset (`POST /orgs/ai-outfitter/rulesets` with
+`conditions.repository_name.include: ["~ALL"]`) covers repositories created
+later and is the better long-term shape; it needs organization-owner rights.
+
 Two further layers back this up, neither of which replaces protection:
 
 - **The pod.** `deployment.yaml`'s `deny-push-to-main` setup step installs a
