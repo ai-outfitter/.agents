@@ -15,9 +15,12 @@ permission before anything is applied.
 
 ### 1. Two tokens for the existing Luce account
 
-Luce is **one agent operator** — a single GitHub machine account,
-`luce@unsupervised.com` — deployed once per organization. Do not create a
-second account for ai-outfitter. The account already exists and is already a
+> Identity, the mailbox, and the exact token permissions are documented in
+> [RUNBOOK.md](RUNBOOK.md). This section covers only what the deploy needs.
+
+Luce is **one agent operator** — a single GitHub machine account, backed by
+one mailbox — deployed once per organization. Do not create a second account
+for ai-outfitter. The account already exists and is already a
 member of this organization; confirm it is assignable here before anything
 else, because `assigned_issue` wakes arrive only if the forge can assign to it:
 
@@ -35,7 +38,7 @@ deployment's own pair; do not reuse another deployment's.
 | Variable | Type | Scope |
 | --- | --- | --- |
 | `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
-| `GITHUB_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`**, only the repositories Luce works. Permissions: Contents **write** (to push her branch), Pull requests **write**, Issues **write**. Nothing else. |
+| `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`**, only the repositories Luce works. Permissions: Contents **write** (to push her branch), Pull requests **write**, Issues **write**. Nothing else. |
 | `LUCE_GITHUB_LOGIN` | — | the machine account's login, for the HTTPS push |
 
 `GET /notifications` accepts classic tokens only: it rejects a fine-grained
@@ -182,7 +185,7 @@ kubectl create namespace agent-luce
 
 kubectl -n agent-luce create secret generic luce-forge \
   --from-literal=GITHUB_NOTIFY_TOKEN="$GITHUB_NOTIFY_TOKEN" \
-  --from-literal=GITHUB_TOKEN="$GITHUB_TOKEN" \
+  --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN" \
   --from-literal=LUCE_GITHUB_LOGIN="<machine-account-login>"
 
 kubectl -n agent-luce create configmap luce-runtime \
@@ -227,7 +230,7 @@ interval, then a branch and a pull request referencing the issue.
 | Preflight returns 403 | The wake token is fine-grained or an App token, not classic |
 | Starts cleanly, never wakes | Filters exclude the reason, or the account is not assignable on that repository |
 | Wakes, then does nothing | The deployed profile still restricts tools to the channel tools — check the revision the `Agent` resolved, not the merged file |
-| Push fails with no prompt | `LUCE_GITHUB_LOGIN` or `GITHUB_TOKEN` missing, so `GIT_ASKPASS` returns empty |
+| Push fails with no prompt | `LUCE_GITHUB_LOGIN` or `GITHUB_PERSONAL_ACCESS_TOKEN` missing, so `GIT_ASKPASS` returns empty |
 | Branch push rejected by the server | Contents write missing from the fine-grained token, or the ruleset also blocks non-default branches |
 
 None of these produces an error or a stack trace.
