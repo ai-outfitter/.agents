@@ -52,12 +52,34 @@ distinguish that from a push to `main`. The token cannot express the
 difference, so the forge has to: protect `main` on every repository she works.
 
 ```sh
-gh api -X PUT /repos/ai-outfitter/<repo>/rulesets \
-  -f name='no direct pushes to main' -f target=branch -f enforcement=active \
-  -F 'conditions[ref_name][include][]=~DEFAULT_BRANCH' \
-  -F 'rules[][type]=pull_request' \
-  -F 'rules[][type]=non_fast_forward'
+cat > ruleset.json <<'JSON'
+{
+  "name": "protect main",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "rules": [
+    { "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false,
+        "allowed_merge_methods": ["merge", "squash", "rebase"]
+      } },
+    { "type": "non_fast_forward" },
+    { "type": "deletion" }
+  ]
+}
+JSON
+gh api -X POST /repos/ai-outfitter/<repo>/rulesets --input ruleset.json
 ```
+
+`required_approving_review_count` is `0` deliberately: the rule exists to stop
+a *direct push*, not to require a second human on a one-maintainer repository.
+Raise it when there is someone to review. Leave `bypass_actors` empty — a
+bypass entry silently returns the ability this whole section removes.
 
 Verify from her side rather than trusting the config — a protected branch
 rejects the push at the server:
