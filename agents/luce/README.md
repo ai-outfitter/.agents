@@ -180,6 +180,15 @@ Then confirm the negative case: activity matching no filter produces no wake.
 
 ### 4. Namespace and the one Secret
 
+> **Check the Agent name is free on the target cluster first.** `Agent` is
+> cluster-scoped and owns its namespace, so `Agent/luce` on a cluster that
+> already hosts another organization's Luce is *that* agent. `kubectl get
+> agents.aioutfitter.com luce` returning an object you did not create means
+> stop — deploy this organization's Luce under a distinct object name from
+> that cluster's own deployment repository instead. Creating the Secret in the
+> wrong `agent-luce` fails against the other agent's quota, which is what
+> `exceeded quota: agent-workspace … count/secrets` means.
+
 One Secret, three keys, all standard forge names — nothing is namespaced to
 this agent, so the same shape works for any agent in the fleet.
 
