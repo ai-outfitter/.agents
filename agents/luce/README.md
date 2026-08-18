@@ -39,7 +39,7 @@ deployment's own pair; do not reuse another deployment's.
 | --- | --- | --- |
 | `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`**, only the repositories Luce works. Permissions: Contents **write** (to push her branch), Pull requests **write**, Issues **write**. Nothing else. |
-| `LUCE_GITHUB_LOGIN` | — | the machine account's login, for the HTTPS push |
+| `GITHUB_USER` | — | the machine account's login; the HTTPS push and the git identity both derive from it |
 
 `GET /notifications` accepts classic tokens only: it rejects a fine-grained
 token and an App installation token with `403`.
@@ -180,32 +180,25 @@ Then confirm the negative case: activity matching no filter produces no wake.
 
 ### 4. Namespace and the one Secret
 
-Everything the agent needs is one Secret. Put the two tokens in files first so
-they never reach shell history, then:
+One Secret, three keys, all standard forge names — nothing is namespaced to
+this agent, so the same shape works for any agent in the fleet.
+
+Write the tokens to files first so they never reach shell history, with
+`printf %s` so no trailing newline is stored:
 
 ```sh
+printf %s "$NOTIFY_TOKEN" > notify-token.txt
+printf %s "$WORK_TOKEN"   > work-token.txt
+chmod 600 notify-token.txt work-token.txt
+
 kubectl create namespace agent-luce
 
 kubectl -n agent-luce create secret generic luce-forge \
-  --from-file=GITHUB_NOTIFY_TOKEN=/path/to/notify-token.txt \
-  --from-file=GITHUB_PERSONAL_ACCESS_TOKEN=/path/to/work-token.txt \
-  --from-literal=LUCE_GITHUB_LOGIN='<machine-account-login>' \
-  --from-literal=OUTFITTER_CHANNELS=github \
-  --from-literal=GITHUB_NOTIFY_FILTERS=assigned_issue \
-  --from-literal=GITHUB_NOTIFY_POLL_MS=15000 \
-  --from-literal=GIT_TERMINAL_PROMPT=0 \
-  --from-literal=GIT_AUTHOR_NAME=Luce \
-  --from-literal=GIT_COMMITTER_NAME=Luce \
-  --from-literal=GIT_AUTHOR_EMAIL='<machine-account-noreply-address>' \
-  --from-literal=GIT_COMMITTER_EMAIL='<machine-account-noreply-address>'
-```
+  --from-file=GITHUB_NOTIFY_TOKEN=notify-token.txt \
+  --from-file=GITHUB_PERSONAL_ACCESS_TOKEN=work-token.txt \
+  --from-literal=GITHUB_USER='<machine-account-login>'
 
-`--from-file` uses the file's basename as the key when you write it as
-`KEY=path`, and it strips nothing — make sure the token files have **no
-trailing newline**, or the credential is sent with one:
-
-```sh
-printf %s "$TOKEN" > /path/to/work-token.txt
+rm -f notify-token.txt work-token.txt
 ```
 
 Check the keys landed, without printing any value:
@@ -214,18 +207,24 @@ Check the keys landed, without printing any value:
 kubectl -n agent-luce get secret luce-forge -o jsonpath='{.data}' | jq -r 'keys[]'
 ```
 
-Two details that fail silently if you get them wrong:
+**Set nothing else.** Everything that used to be configured here has a correct
+default, and each one you set by hand is another thing to get wrong:
 
-- **`assigned_issue`, not `assign`.** GitHub sends one `assign` reason for both
-  issues and pull requests, and the source splits it by subject type, so a
-  filter named `assign` matches nothing at all.
-- **Do not add a `GITHUB_TOKEN` key.** Channels falls back to it and treats its
-  presence as "the GitHub channel is configured", so a work token under that
-  name produces a poller that `401`s every interval and only logs it. See
-  [RUNBOOK.md](RUNBOOK.md).
+| Left unset | What happens |
+| --- | --- |
+| `OUTFITTER_CHANNELS` | Auto-detects: starts every source whose credentials are present. Only the GitHub token is, so only `github` starts. |
+| `GITHUB_NOTIFY_FILTERS` | Defaults to `review_requested,assigned_issue,assigned_pr,author` — `assigned_issue` is already there. |
+| `GITHUB_NOTIFY_POLL_MS` | Defaults to a 60s floor, and the source honors GitHub's `X-Poll-Interval` when GitHub asks for longer. |
+| git identity | Derived in the setup step from `GITHUB_USER` as `<login>@users.noreply.github.com`, which is the address GitHub attributes commits with. |
 
-`GITHUB_NOTIFY_POLL_MS` is a floor — the source honors GitHub's
-`X-Poll-Interval` when GitHub asks for a longer gap.
+Two keys that must **not** appear:
+
+- **`GITHUB_TOKEN`.** Channels falls back to it and treats its presence as "the
+  GitHub channel is configured", so a work token under that name gives a poller
+  that `401`s every interval and only logs it — `Ready`, and never woken.
+- **`assign`** as a filter value, if you do override the filters. GitHub sends
+  one `assign` reason for both issues and pull requests and the source splits it
+  by subject type, so `assign` matches nothing.
 
 ### 5. Deploy-role `resourceNames`, and the `fleet` environment
 
@@ -253,7 +252,7 @@ interval, then a branch and a pull request referencing the issue.
 | Preflight returns 403 | The wake token is fine-grained or an App token, not classic |
 | Starts cleanly, never wakes | Filters exclude the reason, or the account is not assignable on that repository |
 | Wakes, then does nothing | The deployed profile still restricts tools to the channel tools — check the revision the `Agent` resolved, not the merged file |
-| Push fails with no prompt | `LUCE_GITHUB_LOGIN` or `GITHUB_PERSONAL_ACCESS_TOKEN` missing, so `GIT_ASKPASS` returns empty |
+| Push fails with no prompt | `GITHUB_USER` or `GITHUB_PERSONAL_ACCESS_TOKEN` missing, so `GIT_ASKPASS` returns empty |
 | Branch push rejected by the server | Contents write missing from the fine-grained token, or the ruleset also blocks non-default branches |
 
 None of these produces an error or a stack trace.

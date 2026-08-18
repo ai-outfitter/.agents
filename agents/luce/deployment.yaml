@@ -4,10 +4,9 @@
 # file and the revision the cluster resolves are the same commit by
 # construction.
 #
-# Bootstrap is an administrator's, not CI's: the agent-luce namespace, the
-# luce-forge Secret, and the luce-runtime ConfigMap must exist before the
-# first deploy, and the deploy role needs luce in its resourceNames. See
-# agents/luce/README.md.
+# Bootstrap is an administrator's, not CI's: the agent-luce namespace and the
+# luce-forge Secret must exist before the first deploy, and the deploy role
+# needs luce in its resourceNames. See agents/luce/README.md.
 apiVersion: aioutfitter.com/v1alpha1
 kind: Organization
 metadata:
@@ -33,36 +32,44 @@ spec:
     agent: luce
     harness: pi
   credentials:
-    # Identity and credentials — the mailbox, the machine account, both tokens
-    # and their exact permissions — are documented in agents/luce/RUNBOOK.md.
-    # Cluster-side bootstrap is in agents/luce/README.md.
+    # One Secret carries every credential this agent needs, projected as env.
+    # The keys are the standard forge names — nothing is namespaced to this
+    # agent, so the same Secret shape works for any agent in the fleet and the
+    # setup script below is not written per identity.
     #
-    # One Secret carries the whole environment — both tokens, the login, and the
-    # channel settings. AgentSpec has no env field, so everything reaches the
-    # container the same way regardless: projected through EnvFrom. Splitting
-    # the non-secret half into a ConfigMap would buy nothing here and doubles
-    # the objects an operator has to create correctly before the first deploy.
+    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
+    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
+    #   GITHUB_USER                    the machine account's login
+    #
+    # Everything else is left to its default: the channels source already
+    # defaults to the reasons this agent wants, and to a 60s poll floor, and
+    # auto-detects the sources whose credentials are present. See RUNBOOK.md.
     - secret: luce-forge
       as: env
   setup:
-    # Luce pushes its feature branch with git over HTTPS: the runtime image has
-    # git but no gh, curl, or wget. GIT_ASKPASS answers the credential prompt
-    # from the environment, so the token never lands on disk and never appears
-    # in a remote URL or in .git/config.
+    # Luce pushes her branch with git over HTTPS: the runtime image has git but
+    # no gh, curl, or wget. GIT_ASKPASS answers the credential prompt from the
+    # environment, so the token never lands on disk and never appears in a
+    # remote URL or in .git/config.
+    #
+    # Identity is derived from GITHUB_USER rather than configured separately —
+    # <login>@users.noreply.github.com is the address GitHub attributes commits
+    # with, so deriving it keeps attribution correct with nothing to set.
     - name: git-https-credential
       script: |
         set -eu
         umask 077
 
-        test -n "${GITHUB_PERSONAL_ACCESS_TOKEN:?GITHUB_PERSONAL_ACCESS_TOKEN must be supplied by luce-forge}"
-        test -n "${LUCE_GITHUB_LOGIN:?LUCE_GITHUB_LOGIN must be supplied by luce-forge}"
+        : "${GITHUB_PERSONAL_ACCESS_TOKEN:?luce-forge must provide GITHUB_PERSONAL_ACCESS_TOKEN}"
+        : "${GITHUB_USER:?luce-forge must provide GITHUB_USER}"
 
         askpass="${HOME}/.git-askpass"
         cat >"$askpass" <<'ASKPASS'
         #!/bin/sh
         case "$1" in
-          *[Uu]sername*) printf '%s\n' "$LUCE_GITHUB_LOGIN" ;;
+          *[Uu]sername*) printf '%s\n' "$GITHUB_USER" ;;
           *[Pp]assword*) printf '%s\n' "$GITHUB_PERSONAL_ACCESS_TOKEN" ;;
+          *) exit 1 ;;
         esac
         ASKPASS
         chmod 0700 "$askpass"
@@ -71,7 +78,8 @@ spec:
         # No credential helper: askPass is the only source, so a stale or wrong
         # token fails instead of silently reusing a cached one.
         git config --global credential.helper ''
-
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
   workspace:
     resourceQuota:
       hard:
