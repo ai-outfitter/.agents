@@ -22,7 +22,7 @@ arrive only if the forge can assign to this account.
 | Variable | Type | Scope |
 | --- | --- | --- |
 | `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
-| `GITHUB_TOKEN` | fine-grained PAT | resource owner `ai-outfitter`, only the repositories Luce works |
+| `GITHUB_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`**, only the repositories Luce works. Permissions: Contents **write** (to push her branch), Pull requests **write**, Issues **write**. Nothing else. |
 | `LUCE_GITHUB_LOGIN` | — | the machine account's login, for the HTTPS push |
 
 `GET /notifications` accepts classic tokens only: it rejects a fine-grained
@@ -45,7 +45,49 @@ curl -sS -o /dev/null -w '%header{x-oauth-scopes}\n' \
   https://api.github.com/notifications
 ```
 
-### 2. Prove the wake on a workstation, before the first deploy
+### 2. Branch protection — this is what stops her pushing to `main`
+
+Contents **write** is what lets Luce push her feature branch, and git does not
+distinguish that from a push to `main`. The token cannot express the
+difference, so the forge has to: protect `main` on every repository she works.
+
+```sh
+gh api -X PUT /repos/ai-outfitter/<repo>/rulesets \
+  -f name='no direct pushes to main' -f target=branch -f enforcement=active \
+  -F 'conditions[ref_name][include][]=~DEFAULT_BRANCH' \
+  -F 'rules[][type]=pull_request' \
+  -F 'rules[][type]=non_fast_forward'
+```
+
+Verify from her side rather than trusting the config — a protected branch
+rejects the push at the server:
+
+```sh
+gh api /repos/ai-outfitter/<repo>/rules/branches/main --jq '[.[].type]'
+```
+
+`pull_request` in that list means a direct push is refused and a pull request
+is the only way in.
+
+Two further layers back this up, neither of which replaces protection:
+
+- **The pod.** `deployment.yaml`'s `deny-push-to-main` setup step installs a
+  global `core.hooksPath` pre-push hook that refuses `refs/heads/main` and
+  `refs/heads/master` in every repository, including ones cloned later. It
+  fails closed on a repository whose protection nobody configured yet. It lives
+  in the pod, so it is a guardrail, not a boundary — `--no-verify` bypasses it,
+  which is why the profile forbids that explicitly.
+- **`governance/sdlc-baseline.yaml`.** Luce's identity records
+  `may: [open-issue, comment, assign, push-branch, open-pr, request-review]`
+  and `may-not: [merge, push-protected]`, so a conformance report shows any
+  repository that drifts out of protection.
+
+The organization scoping works the same way: a fine-grained PAT has exactly one
+resource owner as a property of the credential, so a Luce carrying an
+`ai-outfitter` token cannot reach another organization even if something in an
+issue body asks her to.
+
+### 3. Prove the wake on a workstation, before the first deploy
 
 Do not skip this. Every misconfiguration in this channel fails **silently** —
 the process starts cleanly, logs nothing, and never wakes — so a quiet pod is
@@ -69,7 +111,7 @@ interval:
 
 Then confirm the negative case: activity matching no filter produces no wake.
 
-### 3. Namespace, Secret, and ConfigMap
+### 4. Namespace, Secret, and ConfigMap
 
 ```sh
 kubectl create namespace agent-luce
@@ -95,7 +137,7 @@ issues and pull requests, and the source splits it by subject type, so a filter
 named `assign` matches nothing. `GITHUB_NOTIFY_POLL_MS` is a floor — the source
 honors GitHub's `X-Poll-Interval` when GitHub asks for a longer gap.
 
-### 4. Deploy-role `resourceNames`, and the `fleet` environment
+### 5. Deploy-role `resourceNames`, and the `fleet` environment
 
 The deploy identity needs `get` and `patch` on `agents.aioutfitter.com/luce`,
 `organizations.aioutfitter.com/ai-outfitter`, and `deployments.apps/agent-runtime`
@@ -122,5 +164,7 @@ interval, then a branch and a pull request referencing the issue.
 | Starts cleanly, never wakes | Filters exclude the reason, or the account is not assignable on that repository |
 | Wakes, then does nothing | The deployed profile still restricts tools to the channel tools — check the revision the `Agent` resolved, not the merged file |
 | Push fails with no prompt | `LUCE_GITHUB_LOGIN` or `GITHUB_TOKEN` missing, so `GIT_ASKPASS` returns empty |
+| `refusing to push to refs/heads/main` | Working as designed — the pre-push hook. She must open a pull request, not push. |
+| Branch push rejected by the server | Contents write missing from the fine-grained token, or the ruleset also blocks non-default branches |
 
 None of these produces an error or a stack trace.

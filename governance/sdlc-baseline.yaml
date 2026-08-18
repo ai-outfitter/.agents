@@ -28,8 +28,11 @@ rules:
       may: [open-pr, comment, request-review]
       may-not: [merge, push-protected]
     luce:
-      may: [open-issue, comment, assign]
-      may-not: [merge, push-protected, open-pr]
+      # Luce implements the issues assigned to her, so she pushes a feature
+      # branch and opens a pull request. `push-protected` stays denied: the
+      # branch is how work leaves her, and the pull request is how it lands.
+      may: [open-issue, comment, assign, push-branch, open-pr, request-review]
+      may-not: [merge, push-protected]
   teams:
     reviewers:
       role: reviewer

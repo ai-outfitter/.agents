@@ -69,6 +69,43 @@ spec:
         # No credential helper: askPass is the only source, so a stale or wrong
         # token fails instead of silently reusing a cached one.
         git config --global credential.helper ''
+
+    # Luce opens pull requests; she never pushes to main. Branch protection on
+    # the forge is the authority for that, but it is per-repository and can be
+    # missing on a new one. This hook denies the push locally, in every
+    # repository, before the credential is ever offered — so a repository whose
+    # protection was never configured still cannot take a direct push from her.
+    #
+    # A hook is not a security boundary: it lives in the pod and a determined
+    # agent could bypass it. It is the layer that makes the common failure —
+    # protection not yet configured on a new repository — fail closed instead
+    # of silently succeeding.
+    - name: deny-push-to-main
+      script: |
+        set -eu
+        umask 077
+
+        hooks="${HOME}/.git-hooks"
+        mkdir -p "$hooks"
+
+        cat >"${hooks}/pre-push" <<'HOOK'
+        #!/bin/sh
+        # git feeds "<local ref> <local sha> <remote ref> <remote sha>" per ref.
+        while read -r _local_ref _local_sha remote_ref _remote_sha; do
+          case "$remote_ref" in
+            refs/heads/main|refs/heads/master)
+              echo "refusing to push to ${remote_ref}: open a pull request instead" >&2
+              exit 1
+              ;;
+          esac
+        done
+        exit 0
+        HOOK
+        chmod 0700 "${hooks}/pre-push"
+
+        # core.hooksPath is global, so it covers repositories cloned later —
+        # a per-repository .git/hooks would only protect what exists now.
+        git config --global core.hooksPath "$hooks"
   workspace:
     resourceQuota:
       hard:
