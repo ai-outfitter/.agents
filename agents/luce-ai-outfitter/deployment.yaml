@@ -1,0 +1,116 @@
+# Luce's fleet declaration. deploy-catalog globs agents/*/deployment.yaml, so
+# this file's existence is what puts Luce in the fleet, and CI renders
+# __REVISION__ with the merge commit that produced it: the profile beside this
+# file and the revision the cluster resolves are the same commit by
+# construction.
+#
+# Bootstrap is an administrator's, not CI's: the agent-luce-ai-outfitter namespace and the
+# luce-forge Secret must exist before the first deploy, and the deploy role
+# needs luce in its resourceNames. See agents/luce/README.md.
+# `Agent` is CLUSTER-SCOPED and owns its namespace, and one Luce persona is
+# deployed once per organization — so the Agent name carries the organization.
+# `Agent/luce-ai-outfitter` gets namespace `agent-luce-ai-outfitter`, its own
+# quota, and its own Secret, and can never collide with another organization's
+# Luce on a shared cluster. A bare `Agent/luce` would: applying it where
+# another org's Luce holds that name takes over the object, and deleting or
+# renaming an Agent cascade-deletes its namespace including the workspace PVC.
+#
+# deploy-catalog requires this directory's name to equal the Agent name; the
+# profile it runs stays `agents/luce` via spec.profile.agent.
+apiVersion: aioutfitter.com/v1alpha1
+kind: Organization
+metadata:
+  name: ai-outfitter
+spec:
+  displayName: AI Outfitter
+  agentCatalogs:
+    # Public catalog: it resolves anonymously, so no catalog credential and no
+    # private-catalog setup step. The name must match the workflow's
+    # catalog-source input, which is what convergence is checked against.
+    - name: ai-outfitter-agents
+      github: ai-outfitter/.agents
+      revision: __REVISION__
+---
+apiVersion: aioutfitter.com/v1alpha1
+kind: Agent
+metadata:
+  name: luce-ai-outfitter
+spec:
+  memberships:
+    - organization: ai-outfitter
+  profile:
+    agent: luce
+    harness: pi
+  credentials:
+    # One Secret carries every credential this agent needs, projected as env.
+    # The keys are the standard forge names — nothing is namespaced to this
+    # agent, so the same Secret shape works for any agent in the fleet and the
+    # setup script below is not written per identity.
+    #
+    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
+    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
+    #   GITHUB_USER                    the machine account's login
+    #
+    # Everything else is left to its default: the channels source already
+    # defaults to the reasons this agent wants, and to a 60s poll floor, and
+    # auto-detects the sources whose credentials are present. See RUNBOOK.md.
+    - secret: luce-forge
+      as: env
+  setup:
+    # Luce pushes her branch with git over HTTPS: the runtime image has git but
+    # no gh, curl, or wget. GIT_ASKPASS answers the credential prompt from the
+    # environment, so the token never lands on disk and never appears in a
+    # remote URL or in .git/config.
+    #
+    # Identity is derived from GITHUB_USER rather than configured separately —
+    # <login>@users.noreply.github.com is the address GitHub attributes commits
+    # with, so deriving it keeps attribution correct with nothing to set.
+    - name: git-https-credential
+      script: |
+        set -eu
+        umask 077
+
+        : "${GITHUB_PERSONAL_ACCESS_TOKEN:?luce-forge must provide GITHUB_PERSONAL_ACCESS_TOKEN}"
+        : "${GITHUB_USER:?luce-forge must provide GITHUB_USER}"
+
+        askpass="${HOME}/.git-askpass"
+        cat >"$askpass" <<'ASKPASS'
+        #!/bin/sh
+        case "$1" in
+          *[Uu]sername*) printf '%s\n' "$GITHUB_USER" ;;
+          *[Pp]assword*) printf '%s\n' "$GITHUB_PERSONAL_ACCESS_TOKEN" ;;
+          *) exit 1 ;;
+        esac
+        ASKPASS
+        chmod 0700 "$askpass"
+
+        git config --global core.askPass "$askpass"
+        # No credential helper: askPass is the only source, so a stale or wrong
+        # token fails instead of silently reusing a cached one.
+        git config --global credential.helper ''
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
+  workspace:
+    resourceQuota:
+      hard:
+        requests.cpu: "2"
+        requests.memory: 4Gi
+        limits.cpu: "4"
+        limits.memory: 8Gi
+        requests.storage: 40Gi
+        persistentvolumeclaims: "4"
+        count/pods: "10"
+        count/jobs.batch: "20"
+        count/services: "5"
+        count/configmaps: "20"
+        count/secrets: "10"
+    limitRange:
+      container:
+        defaultRequest:
+          cpu: 100m
+          memory: 256Mi
+        default:
+          cpu: "1"
+          memory: 2Gi
+    volume:
+      size: 10Gi

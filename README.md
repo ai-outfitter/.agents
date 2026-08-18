@@ -9,11 +9,10 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   the pinned community-profiles catalog source.
 - [`agents/outfitter-bot`](agents/outfitter-bot/agent.md) — the org's resident
   agent: works issues assigned to it into reviewed pull requests.
-- [`agents/luce`](agents/luce/agent.md) — the org's triage and review agent:
-  scopes a report into an issue with acceptance criteria, assigns
-  outfitter-bot, and reviews the pull request that comes back. Luce is a
-  persona deployed once per organization; each deployment holds a token for
-  its own organization only.
+- [`agents/luce`](agents/luce/agent.md) — the org's resident agent: scopes a
+  report into an issue with acceptance criteria, then works the issues
+  assigned to it into pull requests. Luce is a persona deployed once per
+  organization; each deployment holds a token for its own organization only.
 - More shared contributor agents and skills land here as they emerge; broader
   catalogs live in
   [community-profiles](https://github.com/ai-outfitter/community-profiles).
