@@ -183,28 +183,35 @@ Then confirm the negative case: activity matching no filter produces no wake.
 One Secret, three keys, all standard forge names — nothing is namespaced to
 this agent, so the same shape works for any agent in the fleet.
 
-Write the tokens to files first so they never reach shell history, with
-`printf %s` so no trailing newline is stored:
-
 ```sh
-printf %s "$NOTIFY_TOKEN" > notify-token.txt
-printf %s "$WORK_TOKEN"   > work-token.txt
-chmod 600 notify-token.txt work-token.txt
-
 kubectl create namespace agent-luce
 
 kubectl -n agent-luce create secret generic luce-forge \
-  --from-file=GITHUB_NOTIFY_TOKEN=notify-token.txt \
-  --from-file=GITHUB_PERSONAL_ACCESS_TOKEN=work-token.txt \
-  --from-literal=GITHUB_USER='<machine-account-login>'
-
-rm -f notify-token.txt work-token.txt
+  --from-literal=GITHUB_NOTIFY_TOKEN='ghp_replace_with_the_classic_notifications_token' \
+  --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_replace_with_the_fine_grained_token' \
+  --from-literal=GITHUB_USER='luce-machine-account'
 ```
+
+Single-quote each value: a token can contain characters the shell would
+otherwise expand, and quoting also keeps the value exactly as issued — no
+trailing newline, which `--from-file` would preserve and which produces an
+authentication failure with no useful error.
+
+Prefix the command with a space (with `HISTCONTROL=ignorespace` set) or
+`unset HISTFILE` first, so the tokens do not land in shell history.
 
 Check the keys landed, without printing any value:
 
 ```sh
 kubectl -n agent-luce get secret luce-forge -o jsonpath='{.data}' | jq -r 'keys[]'
+```
+
+Expected, exactly:
+
+```text
+GITHUB_NOTIFY_TOKEN
+GITHUB_PERSONAL_ACCESS_TOKEN
+GITHUB_USER
 ```
 
 **Set nothing else.** Everything that used to be configured here has a correct
@@ -215,7 +222,7 @@ default, and each one you set by hand is another thing to get wrong:
 | `OUTFITTER_CHANNELS` | Auto-detects: starts every source whose credentials are present. Only the GitHub token is, so only `github` starts. |
 | `GITHUB_NOTIFY_FILTERS` | Defaults to `review_requested,assigned_issue,assigned_pr,author` — `assigned_issue` is already there. |
 | `GITHUB_NOTIFY_POLL_MS` | Defaults to a 60s floor, and the source honors GitHub's `X-Poll-Interval` when GitHub asks for longer. |
-| git identity | Derived in the setup step from `GITHUB_USER` as `<login>@users.noreply.github.com`, which is the address GitHub attributes commits with. |
+| git identity | Derived in the setup step from `GITHUB_USER` as `<login>@users.noreply.github.com`, the address GitHub attributes commits with. |
 
 Two keys that must **not** appear:
 

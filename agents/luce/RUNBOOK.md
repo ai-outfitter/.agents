@@ -125,6 +125,25 @@ organization, so the worst outcome of a foreign wake is a wake that produces
 nothing. Expect those in the logs; they are the design. The profile tells Luce
 to settle such a task without acting or commenting.
 
+## How the operator delivers this
+
+Verified against `ai-outfitter/agent-operator`, because the shape here depends
+on three behaviours that are not obvious from the manifest:
+
+- **`AgentSpec` has no `env` field.** Everything reaches the container through
+  `spec.credentials`, and the controller projects an `as: env` entry into
+  `EnvFrom` — `SecretRef` for a Secret, `ConfigMapRef` for a ConfigMap. Secret
+  and non-secret values therefore arrive identically, which is why one Secret
+  carries the whole environment and there is no ConfigMap.
+- **Setup steps are init containers, and they receive the same `EnvFrom`.**
+  That is what lets the `git-https-credential` step read `GITHUB_USER` and
+  `GITHUB_PERSONAL_ACCESS_TOKEN`. Note the consequence: an environment variable
+  *exported* inside a setup step does not survive into the agent container —
+  only files do.
+- **Both containers run with `HOME=/workspace`, the durable PVC.** So the
+  askpass helper and the `.gitconfig` the setup step writes are still there
+  when the agent container starts, and they survive a restart.
+
 ## Rotation
 
 Tokens expire and the failure is silent. On rotation, replace the Secret and
@@ -132,11 +151,10 @@ then restart the agent's Deployment — the values are read into the process
 environment at start, so a running pod keeps the old ones:
 
 ```sh
-# Rotate in place: replace only the changed keys, keeping the rest.
 kubectl -n agent-luce create secret generic luce-forge \
-  --from-file=GITHUB_NOTIFY_TOKEN=/path/to/notify.txt \
-  --from-file=GITHUB_PERSONAL_ACCESS_TOKEN=/path/to/work.txt \
-  --from-literal=GITHUB_USER="$GITHUB_USER" \
+  --from-literal=GITHUB_NOTIFY_TOKEN='ghp_the_new_classic_token' \
+  --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_the_new_fine_grained_token' \
+  --from-literal=GITHUB_USER='luce-machine-account' \
   --dry-run=client -o yaml | kubectl -n agent-luce apply -f -
 
 kubectl -n agent-luce rollout restart deployment/agent-runtime
