@@ -4,30 +4,19 @@
 # file and the revision the cluster resolves are the same commit by
 # construction.
 #
-# Bootstrap is an administrator's, not CI's: the agent-luce namespace and the
+# Bootstrap is an administrator's, not CI's: the agent-luce-ai-outfitter namespace and the
 # luce-forge Secret must exist before the first deploy, and the deploy role
 # needs luce in its resourceNames. See agents/luce/README.md.
-# ─────────────────────────────────────────────────────────────────────────────
-# DANGER: `Agent` is CLUSTER-SCOPED and its name must be free on the target
-# cluster.
+# `Agent` is CLUSTER-SCOPED and owns its namespace, and one Luce persona is
+# deployed once per organization — so the Agent name carries the organization.
+# `Agent/luce-ai-outfitter` gets namespace `agent-luce-ai-outfitter`, its own
+# quota, and its own Secret, and can never collide with another organization's
+# Luce on a shared cluster. A bare `Agent/luce` would: applying it where
+# another org's Luce holds that name takes over the object, and deleting or
+# renaming an Agent cascade-deletes its namespace including the workspace PVC.
 #
-# deploy-catalog requires the directory name to equal the Agent name, so this
-# file can only ever declare `Agent/luce`. The operator derives the namespace
-# from that name — `agent-luce` — and sets an owner reference on it, so
-# applying this where an `Agent/luce` already exists takes over that object.
-# Deleting or renaming an Agent then cascade-deletes the whole namespace:
-# every Secret, and the workspace PVC with the seeded authentication on it.
-#
-# On a cluster that already hosts another organization's Luce under the bare
-# name, do NOT apply this file. Deploy ai-outfitter's Luce as a separately
-# named Agent — one carrying the organization in its object name, so it gets
-# its own namespace and its own credentials — from that cluster's own
-# deployment repository. This file is for a cluster where `Agent/luce` is free.
-#
-# The same applies to the Secret: create it in this Agent's namespace, not in
-# whatever `agent-luce` happens to exist. Another agent's namespace has another
-# agent's quota, and the failure looks like an unrelated quota error.
-# ─────────────────────────────────────────────────────────────────────────────
+# deploy-catalog requires this directory's name to equal the Agent name; the
+# profile it runs stays `agents/luce` via spec.profile.agent.
 apiVersion: aioutfitter.com/v1alpha1
 kind: Organization
 metadata:
@@ -45,7 +34,7 @@ spec:
 apiVersion: aioutfitter.com/v1alpha1
 kind: Agent
 metadata:
-  name: luce
+  name: luce-ai-outfitter
 spec:
   memberships:
     - organization: ai-outfitter

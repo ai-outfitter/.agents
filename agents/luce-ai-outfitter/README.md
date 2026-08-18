@@ -180,22 +180,18 @@ Then confirm the negative case: activity matching no filter produces no wake.
 
 ### 4. Namespace and the one Secret
 
-> **Check the Agent name is free on the target cluster first.** `Agent` is
-> cluster-scoped and owns its namespace, so `Agent/luce` on a cluster that
-> already hosts another organization's Luce is *that* agent. `kubectl get
-> agents.aioutfitter.com luce` returning an object you did not create means
-> stop — deploy this organization's Luce under a distinct object name from
-> that cluster's own deployment repository instead. Creating the Secret in the
-> wrong `agent-luce` fails against the other agent's quota, which is what
-> `exceeded quota: agent-workspace … count/secrets` means.
+The Agent name carries the organization — `Agent/luce-ai-outfitter`,
+namespace `agent-luce-ai-outfitter` — so it cannot collide with another
+organization's Luce on a shared cluster, and the Secret below lands in this
+deployment's own namespace and quota.
 
 One Secret, three keys, all standard forge names — nothing is namespaced to
 this agent, so the same shape works for any agent in the fleet.
 
 ```sh
-kubectl create namespace agent-luce
+kubectl create namespace agent-luce-ai-outfitter
 
-kubectl -n agent-luce create secret generic luce-forge \
+kubectl -n agent-luce-ai-outfitter create secret generic luce-forge \
   --from-literal=GITHUB_NOTIFY_TOKEN='ghp_replace_with_the_classic_notifications_token' \
   --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_replace_with_the_fine_grained_token' \
   --from-literal=GITHUB_USER='luce-machine-account'
@@ -212,7 +208,7 @@ Prefix the command with a space (with `HISTCONTROL=ignorespace` set) or
 Check the keys landed, without printing any value:
 
 ```sh
-kubectl -n agent-luce get secret luce-forge -o jsonpath='{.data}' | jq -r 'keys[]'
+kubectl -n agent-luce-ai-outfitter get secret luce-forge -o jsonpath='{.data}' | jq -r 'keys[]'
 ```
 
 Expected, exactly:
@@ -244,10 +240,10 @@ Two keys that must **not** appear:
 
 ### 5. Deploy-role `resourceNames`, and the `fleet` environment
 
-The deploy identity needs `get` and `patch` on `agents.aioutfitter.com/luce`,
+The deploy identity needs `get` and `patch` on `agents.aioutfitter.com/luce-ai-outfitter`,
 `organizations.aioutfitter.com/ai-outfitter`, and `deployments.apps/agent-runtime`
-in `agent-luce`. It must **not** be able to `delete` them, to reach any agent
-unscoped, or to read Secrets in `agent-luce`; the preflight asserts both
+in `agent-luce-ai-outfitter`. It must **not** be able to `delete` them, to reach any agent
+unscoped, or to read Secrets in `agent-luce-ai-outfitter`; the preflight asserts both
 directions and fails closed.
 
 The workflow's `fleet` environment supplies `AWS_DEPLOY_ROLE_ARN`,

@@ -151,13 +151,13 @@ then restart the agent's Deployment — the values are read into the process
 environment at start, so a running pod keeps the old ones:
 
 ```sh
-kubectl -n agent-luce create secret generic luce-forge \
+kubectl -n agent-luce-ai-outfitter create secret generic luce-forge \
   --from-literal=GITHUB_NOTIFY_TOKEN='ghp_the_new_classic_token' \
   --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_the_new_fine_grained_token' \
   --from-literal=GITHUB_USER='luce-machine-account' \
-  --dry-run=client -o yaml | kubectl -n agent-luce apply -f -
+  --dry-run=client -o yaml | kubectl -n agent-luce-ai-outfitter apply -f -
 
-kubectl -n agent-luce rollout restart deployment/agent-runtime
+kubectl -n agent-luce-ai-outfitter rollout restart deployment/agent-runtime
 ```
 
 Revoke the old tokens *after* the restart completes, not before.
