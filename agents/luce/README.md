@@ -178,31 +178,54 @@ interval:
 
 Then confirm the negative case: activity matching no filter produces no wake.
 
-### 4. Namespace, Secret, and ConfigMap
+### 4. Namespace and the one Secret
+
+Everything the agent needs is one Secret. Put the two tokens in files first so
+they never reach shell history, then:
 
 ```sh
 kubectl create namespace agent-luce
 
 kubectl -n agent-luce create secret generic luce-forge \
-  --from-literal=GITHUB_NOTIFY_TOKEN="$GITHUB_NOTIFY_TOKEN" \
-  --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PERSONAL_ACCESS_TOKEN" \
-  --from-literal=LUCE_GITHUB_LOGIN="<machine-account-login>"
-
-kubectl -n agent-luce create configmap luce-runtime \
+  --from-file=GITHUB_NOTIFY_TOKEN=/path/to/notify-token.txt \
+  --from-file=GITHUB_PERSONAL_ACCESS_TOKEN=/path/to/work-token.txt \
+  --from-literal=LUCE_GITHUB_LOGIN='<machine-account-login>' \
   --from-literal=OUTFITTER_CHANNELS=github \
   --from-literal=GITHUB_NOTIFY_FILTERS=assigned_issue \
   --from-literal=GITHUB_NOTIFY_POLL_MS=15000 \
   --from-literal=GIT_TERMINAL_PROMPT=0 \
   --from-literal=GIT_AUTHOR_NAME=Luce \
   --from-literal=GIT_COMMITTER_NAME=Luce \
-  --from-literal=GIT_AUTHOR_EMAIL='luce@users.noreply.github.com' \
-  --from-literal=GIT_COMMITTER_EMAIL='luce@users.noreply.github.com'
+  --from-literal=GIT_AUTHOR_EMAIL='<machine-account-noreply-address>' \
+  --from-literal=GIT_COMMITTER_EMAIL='<machine-account-noreply-address>'
 ```
 
-`assigned_issue`, not `assign`: GitHub sends one `assign` reason for both
-issues and pull requests, and the source splits it by subject type, so a filter
-named `assign` matches nothing. `GITHUB_NOTIFY_POLL_MS` is a floor — the source
-honors GitHub's `X-Poll-Interval` when GitHub asks for a longer gap.
+`--from-file` uses the file's basename as the key when you write it as
+`KEY=path`, and it strips nothing — make sure the token files have **no
+trailing newline**, or the credential is sent with one:
+
+```sh
+printf %s "$TOKEN" > /path/to/work-token.txt
+```
+
+Check the keys landed, without printing any value:
+
+```sh
+kubectl -n agent-luce get secret luce-forge -o jsonpath='{.data}' | jq -r 'keys[]'
+```
+
+Two details that fail silently if you get them wrong:
+
+- **`assigned_issue`, not `assign`.** GitHub sends one `assign` reason for both
+  issues and pull requests, and the source splits it by subject type, so a
+  filter named `assign` matches nothing at all.
+- **Do not add a `GITHUB_TOKEN` key.** Channels falls back to it and treats its
+  presence as "the GitHub channel is configured", so a work token under that
+  name produces a poller that `401`s every interval and only logs it. See
+  [RUNBOOK.md](RUNBOOK.md).
+
+`GITHUB_NOTIFY_POLL_MS` is a floor — the source honors GitHub's
+`X-Poll-Interval` when GitHub asks for a longer gap.
 
 ### 5. Deploy-role `resourceNames`, and the `fleet` environment
 

@@ -37,14 +37,12 @@ spec:
     # and their exact permissions — are documented in agents/luce/RUNBOOK.md.
     # Cluster-side bootstrap is in agents/luce/README.md.
     #
-    # GITHUB_NOTIFY_TOKEN (classic, notifications scope only), GITHUB_PERSONAL_ACCESS_TOKEN
-    # (fine-grained, this org only), and LUCE_GITHUB_LOGIN.
+    # One Secret carries the whole environment — both tokens, the login, and the
+    # channel settings. AgentSpec has no env field, so everything reaches the
+    # container the same way regardless: projected through EnvFrom. Splitting
+    # the non-secret half into a ConfigMap would buy nothing here and doubles
+    # the objects an operator has to create correctly before the first deploy.
     - secret: luce-forge
-      as: env
-    # AgentSpec has no env field: non-secret runtime environment reaches the
-    # container as a ConfigMap projected through EnvFrom, the same path as the
-    # Secret.
-    - configMap: luce-runtime
       as: env
   setup:
     # Luce pushes its feature branch with git over HTTPS: the runtime image has

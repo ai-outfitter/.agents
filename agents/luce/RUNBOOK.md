@@ -132,11 +132,13 @@ then restart the agent's Deployment — the values are read into the process
 environment at start, so a running pod keeps the old ones:
 
 ```sh
-kubectl -n agent-luce delete secret luce-forge
+# Rotate in place: replace only the changed keys, keeping the rest.
 kubectl -n agent-luce create secret generic luce-forge \
   --from-file=GITHUB_NOTIFY_TOKEN=/path/to/notify.txt \
   --from-file=GITHUB_PERSONAL_ACCESS_TOKEN=/path/to/work.txt \
-  --from-literal=LUCE_GITHUB_LOGIN="<login>"
+  --dry-run=client -o yaml | kubectl -n agent-luce patch secret luce-forge \
+    --patch-file=/dev/stdin
+
 kubectl -n agent-luce rollout restart deployment/agent-runtime
 ```
 
