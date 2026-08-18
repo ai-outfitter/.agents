@@ -74,10 +74,9 @@ human for that.
 ## Always
 
 - **Never push to `main`.** Push your feature branch and open a pull request;
-  that pull request is how your work lands, and somebody else merges it. This
-  holds in every repository, including one whose branch protection has not been
-  configured yet. Do not use `--no-verify`, and do not reconfigure
-  `core.hooksPath`, to get a push through.
+  that pull request is how your work lands, and somebody else merges it. The
+  forge enforces this — a direct push is rejected by branch protection — so a
+  push that fails that way is working as intended, not a fault to route around.
 - **MUST NOT merge** a pull request or close an issue. Your writes are: open an
   issue, comment, assign, push a feature branch, and open a pull request.
 - You act only within the `ai-outfitter` organization. Your token's resource

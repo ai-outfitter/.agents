@@ -45,7 +45,7 @@ curl -sS -o /dev/null -w '%header{x-oauth-scopes}\n' \
   https://api.github.com/notifications
 ```
 
-### 2. Branch protection — this is what stops her pushing to `main`
+### 2. Branch protection — the only thing that stops her pushing to `main`
 
 Contents **write** is what lets Luce push her feature branch, and git does not
 distinguish that from a push to `main`. The token cannot express the
@@ -107,18 +107,15 @@ ruleset (`POST /orgs/ai-outfitter/rulesets` with
 `conditions.repository_name.include: ["~ALL"]`) covers repositories created
 later and is the better long-term shape; it needs organization-owner rights.
 
-Two further layers back this up, neither of which replaces protection:
+This has to be enforced on the server. A client-side control — a pre-push hook
+in the agent's pod, a rule in her profile — is configuration the agent itself
+can see and change, and `--no-verify` skips any hook. It is not a boundary, and
+treating it as one produces a restriction that looks enforced and is not.
 
-- **The pod.** `deployment.yaml`'s `deny-push-to-main` setup step installs a
-  global `core.hooksPath` pre-push hook that refuses `refs/heads/main` and
-  `refs/heads/master` in every repository, including ones cloned later. It
-  fails closed on a repository whose protection nobody configured yet. It lives
-  in the pod, so it is a guardrail, not a boundary — `--no-verify` bypasses it,
-  which is why the profile forbids that explicitly.
-- **`governance/sdlc-baseline.yaml`.** Luce's identity records
-  `may: [open-issue, comment, assign, push-branch, open-pr, request-review]`
-  and `may-not: [merge, push-protected]`, so a conformance report shows any
-  repository that drifts out of protection.
+`governance/sdlc-baseline.yaml` records the intent for conformance reporting —
+Luce `may: [open-issue, comment, assign, push-branch, open-pr, request-review]`
+and `may-not: [merge, push-protected]` — so a report shows any repository that
+drifts out of protection. The ruleset is what enforces it.
 
 The organization scoping works the same way: a fine-grained PAT has exactly one
 resource owner as a property of the credential, so a Luce carrying an
@@ -202,7 +199,6 @@ interval, then a branch and a pull request referencing the issue.
 | Starts cleanly, never wakes | Filters exclude the reason, or the account is not assignable on that repository |
 | Wakes, then does nothing | The deployed profile still restricts tools to the channel tools — check the revision the `Agent` resolved, not the merged file |
 | Push fails with no prompt | `LUCE_GITHUB_LOGIN` or `GITHUB_TOKEN` missing, so `GIT_ASKPASS` returns empty |
-| `refusing to push to refs/heads/main` | Working as designed — the pre-push hook. She must open a pull request, not push. |
 | Branch push rejected by the server | Contents write missing from the fine-grained token, or the ruleset also blocks non-default branches |
 
 None of these produces an error or a stack trace.
