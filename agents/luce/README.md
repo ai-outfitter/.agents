@@ -13,11 +13,24 @@ permission before anything is applied.
 
 ## What CI cannot do for you
 
-### 1. A Luce machine account, with two tokens
+### 1. Two tokens for the existing Luce account
 
-A GitHub App **cannot be the assignee of an issue**, so this must be a machine
-user with access to the repositories Luce works in. Wakes for `assigned_issue`
-arrive only if the forge can assign to this account.
+Luce is **one agent operator** — a single GitHub machine account,
+`luce@unsupervised.com` — deployed once per organization. Do not create a
+second account for ai-outfitter. The account already exists and is already a
+member of this organization; confirm it is assignable here before anything
+else, because `assigned_issue` wakes arrive only if the forge can assign to it:
+
+```sh
+# 204 = assignable; 404 = not a collaborator on that repository.
+gh api -i "/repos/ai-outfitter/<repo>/assignees/<login>" 2>/dev/null | head -1
+```
+
+A GitHub App cannot be the assignee of an issue, which is why this is a machine
+user rather than an App.
+
+What is **per organization is the credential, not the account**. Mint this
+deployment's own pair; do not reuse another deployment's.
 
 | Variable | Type | Scope |
 | --- | --- | --- |
@@ -26,10 +39,26 @@ arrive only if the forge can assign to this account.
 | `LUCE_GITHUB_LOGIN` | — | the machine account's login, for the HTTPS push |
 
 `GET /notifications` accepts classic tokens only: it rejects a fine-grained
-token and an App installation token with `403`. The narrow scope on the wake
-token matters in the other direction too — a classic token has no organization
-boundary, so anyone adding `repo` "to be safe" turns it into a
-cross-organization write credential.
+token and an App installation token with `403`.
+
+**The two tokens draw different boundaries, and only one of them is a boundary
+at all.** The fine-grained work token has exactly one resource owner as a
+property of the credential, so this deployment cannot write outside
+`ai-outfitter` — that is what makes the deployment org-scoped. The classic wake
+token has no organization boundary and cannot be given one: it sees
+notifications for *every* organization the shared account belongs to.
+
+The `github` channel source filters on notification **reason** only
+(`GITHUB_NOTIFY_FILTERS`); it has no organization or repository filter. So both
+deployments of Luce wake on the same notification, and each must recognise the
+subjects that are not its own and settle them without acting. Expect wakes for
+another organization's work in the logs; that is the design, not a
+misconfiguration. The profile's Identity section carries the rule.
+
+This also makes the wake token's narrow scope load-bearing in the other
+direction: because it has no organization boundary, anyone adding `repo` "to be
+safe" turns it into a cross-organization *write* credential shared by every
+deployment. Keep it at `notifications` and nothing else.
 
 Verify without printing either token:
 
