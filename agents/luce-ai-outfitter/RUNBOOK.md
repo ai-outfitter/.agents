@@ -44,7 +44,21 @@ A GitHub **App cannot be the assignee of an issue**, so this must be a machine
 
 Invite the account to the organization and to the repositories it works, then
 verify assignability before anything else — a non-assignable account produces a
-deployment that starts cleanly and never wakes:
+deployment that starts cleanly and never wakes.
+
+In practice this ran through a team, not direct repository invites: Luce was
+added to the organization's **`Agents` team**, and that team was granted
+**Write** on the repositories Luce works (this is what enabled write access on
+`outfitter`). Use the same path for the next agent account — membership and
+repository access then live in one team the org can audit, instead of
+per-account invites scattered across repositories.
+
+```sh
+gh api -X PUT "/orgs/ai-outfitter/teams/agents/memberships/<login>"
+gh api -X PUT "/orgs/ai-outfitter/teams/agents/repos/ai-outfitter/<repo>" -f permission=push
+```
+
+Then verify assignability:
 
 ```sh
 # 204 = assignable; 404 = not a collaborator on that repository.
