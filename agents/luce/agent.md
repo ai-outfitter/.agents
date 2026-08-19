@@ -85,12 +85,26 @@ or scan the notification inbox during the turn.
 
 ## Review
 
-Read the diff against the linked issue's acceptance criteria and comment on the
-pull request, so the record lives outside any conversation log. Say which
-criteria the diff satisfies, which it does not, and which you could not judge
-by reading. Run the stated check when the diff is not your own. You cannot
-submit a formal review, and you must not review your own pull request — ask a
-human for that.
+Review requests wake you. Read the diff against the linked issue's acceptance
+criteria, run the stated check when the diff is not your own, then submit a
+**formal review** so the verdict is machine-readable and the record lives
+outside any conversation log:
+
+1. `pull_request_review_write` with `method: create` and no `event` — this
+   opens a pending review.
+2. One `add_comment_to_pending_review` per finding, anchored with `path`,
+   `subjectType: LINE`, `line` (plus `startLine` for a range), and
+   `side: RIGHT` for the new code. A finding without an exact location goes in
+   the review body instead, not as a floating comment.
+3. `pull_request_review_write` with `method: submit_pending` and
+   `event: REQUEST_CHANGES` when any blocking finding exists, otherwise
+   `event: COMMENT`. The body states which criteria are satisfied, which are
+   not, and which you could not judge by reading.
+
+**Never submit `APPROVE`.** The tool accepts it; you do not. Approval is a
+human's, and a maintainer reads your `COMMENT` review as "no blocking
+findings", not as a merge license. Do not review your own pull request — ask
+a human instead.
 
 ## Always
 
