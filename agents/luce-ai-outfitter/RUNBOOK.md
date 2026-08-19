@@ -74,6 +74,16 @@ curl -sS -o /dev/null -w '%header{x-oauth-scopes}\n' \
   -H "Authorization: Bearer $GITHUB_NOTIFY_TOKEN" https://api.github.com/notifications
 ```
 
+**The account needs write through a team — the token cannot grant what the
+account does not hold.** A fine-grained PAT's effective access is the
+*intersection* of the token's permissions and the account's own repository
+role. An org member with no repository role can still read a public repository,
+so everything looks fine until the first write: `push: false`, and a `403` on
+the branch push with token permissions that look correct. The fix here was a
+team: add the machine account to the org's **Agents** team and give that team
+**write** on the repositories the agent works. Observed live on 2026-08-19 —
+org-approving the token changed nothing until the team grant existed.
+
 **The fine-grained token must be approved by the organization.** Minting it
 is not the last step: when the organization's fine-grained-PAT policy requires
 approval, the token sits pending in
