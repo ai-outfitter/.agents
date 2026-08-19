@@ -1,61 +1,108 @@
-# Deploy the fleet this catalog declares, on merge to main.
+# Deploys this catalog's resident agents to the nonprod cluster when the
+# catalog changes.
 #
-# The revision is github.sha — the merge commit itself — so the profile that
-# merged and the revision the cluster resolves are the same commit by
-# construction. There is no separate "bump the pin" step to forget.
-name: Deploy
+# What deploys is clusters.yaml, not this file and not a glob. The job passes
+# `cluster: nonprod` and the action deploys exactly the agents that entry
+# lists, so a manifest in agents/ is inert until the cluster names it.
+#
+# The job's IAM role trust policy pins this repository and the main branch, so
+# renaming this workflow file, adding an `environment:` to the job, or moving
+# the deploy off `main` changes the OIDC subject and the role will refuse to
+# be assumed until the trust policy is updated to match. Update the trust
+# policy first, or deploys break with an AssumeRoleWithWebIdentity failure.
+name: deploy
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - "agents/**"
-      - ".github/workflows/deploy.yml"
+      - agents/**
+      - clusters.yaml
+      - mcp.json
+      - models.json
+      - settings.yml
+      - deploy/**
+      - .github/workflows/deploy.yml
   workflow_dispatch:
 
-# One deploy at a time, and never cancel one midway: an interrupted apply
-# leaves the fleet pinned to a revision nothing finished converging on.
 concurrency:
-  group: deploy-catalog
+  group: catalog-deploy
   cancel-in-progress: false
-
-permissions:
-  contents: read
-  id-token: write
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    # This repository is public. The environment is what keeps a fork or an
-    # unreviewed push from reaching the cluster role, and it holds every
-    # cluster-identifying value so none of them appear in this file.
-    environment: fleet
+    runs-on: ubuntu-24.04
+    # No `environment:` here, deliberately. A job with an environment
+    # presents `repo:...:environment:<name>` as its OIDC subject, but the IAM
+    # trust policy (deploy/RUNBOOK.md) pins
+    # `repo:ai-outfitter/.agents:ref:refs/heads/main` — the two can never
+    # match, and every AssumeRoleWithWebIdentity fails.
+    permissions:
+      contents: read
+      id-token: write
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
 
-      # Identity is the one genuinely per-deployment part, so the action does
-      # not establish it — it only asserts what the identity can and cannot do.
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Point kubectl at the fleet
+      # Pinned and checksummed: a deploy identity should not be handed a
+      # binary resolved at run time from a moving `latest`.
+      - name: Install kubectl
+        env:
+          KUBECTL_VERSION: v1.34.1
+          KUBECTL_SHA256: 7721f265e18709862655affba5343e85e1980639395d5754473dafaadcaa69e3
         run: |
-          aws eks update-kubeconfig \
-            --name "${{ vars.EKS_CLUSTER_NAME }}" \
-            --region "${{ vars.AWS_REGION }}"
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            --output kubectl \
+            "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          echo "${KUBECTL_SHA256}  kubectl" | sha256sum --check --status
+          chmod 0700 kubectl
+          sudo install -m 0755 kubectl /usr/local/bin/kubectl
 
-      # Pinned to a full commit SHA, not a tag: no agent-operator release
-      # containing this action exists yet, and there is deliberately no
-      # floating major tag before 1.0 because release-please puts breaking
-      # changes in minor bumps. Bump this to the merge commit of
-      # ai-outfitter/agent-operator#43 (per-agent converge budget) once it
-      # lands.
-      - uses: ai-outfitter/agent-operator/actions/deploy-catalog@466dac2d3b80f419f34463dbf82b899454885e95
+      - name: Assume the ai-outfitter catalog deploy role
+        uses: aws-actions/configure-aws-credentials@v6
         with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::216577824627:role/ai-outfitter-catalog-deploy
+          role-session-name: ai-outfitter-catalog-deploy
+
+      # Identity is this workflow's job; the action asserts what the identity
+      # can and cannot do, but never establishes it. The caller-ARN check
+      # fails a misconfigured workflow before anything touches the cluster.
+      - name: Point kubectl at nonprod as the deploy identity
+        run: |
+          set -euo pipefail
+          caller_arn="$(aws sts get-caller-identity --query Arn --output text)"
+          case "$caller_arn" in
+            "arn:aws:sts::216577824627:assumed-role/ai-outfitter-catalog-deploy/"*) ;;
+            *)
+              echo "refusing unexpected AWS identity: $caller_arn" >&2
+              exit 1
+              ;;
+          esac
+          aws eks update-kubeconfig --name nonprod --region us-east-1
+
+      # ⚠ DO NOT MERGE ON THIS PIN. f20777b62b1106c284c258b8495874a1fe10e2c8 is
+      # the head of the still-unmerged ai-outfitter/agent-operator#46 as of
+      # 2026-08-19. It carries the `cluster` input this workflow depends on,
+      # the `__ORG__`-rendering this catalog's manifests need, and a doc
+      # commit that names `organization: outfitter` for this catalog by
+      # example — matching what clusters.yaml declares. PR #46 itself is
+      # still open, so this pin is an unreviewed branch tip, not a release —
+      # verify before trusting this comment over the branch:
+      # `gh api repos/ai-outfitter/agent-operator/branches/feat%2Fdeploy-catalog-clusters --jq .commit.sha`
+      # Repin to a merged SHA — or a release tag containing it — before this
+      # lands.
+      #
+      # Exact-SHA pin, updated deliberately: this action patches custom
+      # resources whose API group already changed once (link.aioutfitter.com
+      # → aioutfitter.com), so the deploy step and the CRDs it patches move
+      # as one bump.
+      - name: Deploy the nonprod cluster
+        uses: ai-outfitter/agent-operator/actions/deploy-catalog@f20777b62b1106c284c258b8495874a1fe10e2c8
+        with:
+          cluster: nonprod
           revision: ${{ github.sha }}
-          # Must match spec.agentCatalogs[].name in the Organization that
-          # agents/*/deployment.yaml declares. Convergence is checked against
-          # the revision an Agent resolved for this source by name.
           catalog-source: ai-outfitter-agents
+          field-manager: ai-outfitter-catalog-deploy

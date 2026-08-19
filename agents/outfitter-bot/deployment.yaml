@@ -1,0 +1,129 @@
+# outfitter-bot's fleet declaration. This file is NEW: no deployment.yaml for
+# outfitter-bot ever lived in this catalog — the live CR was deployed from
+# Unsupervisedcom/.agents as a guest (see deploy/RUNBOOK.md § Migration). This
+# is that manifest's org-scoped replacement, modeled on
+# agents/luce/deployment.yaml.
+#
+# The Agent name is __ORG__-outfitter-bot, which renders to
+# `outfitter-outfitter-bot` — the deployment prefix still stutters against
+# the profile id even after choosing `outfitter` over `ai-outfitter`. Left as
+# is: renaming the profile to `bot` would fix it, but not in this change; see
+# the PR body.
+#
+# Bootstrap is an administrator's, not CI's: the
+# agent-__ORG__-outfitter-bot namespace and the agent-credentials Secret must
+# exist before the first deploy, and the deploy role needs
+# __ORG__-outfitter-bot in its resourceNames. See deploy/RUNBOOK.md.
+apiVersion: aioutfitter.com/v1alpha1
+kind: Organization
+metadata:
+  name: __ORG__
+spec:
+  displayName: AI Outfitter
+  agentCatalogs:
+    # Identical, byte-for-byte after render, to the Organization block in
+    # agents/luce/deployment.yaml and agents/vega/deployment.yaml. See that
+    # file's comment for why it is duplicated rather than defined once.
+    - name: ai-outfitter-agents
+      github: ai-outfitter/.agents
+      revision: __REVISION__
+---
+apiVersion: aioutfitter.com/v1alpha1
+kind: Agent
+metadata:
+  name: __ORG__-outfitter-bot
+spec:
+  memberships:
+    - organization: __ORG__
+  profile:
+    agent: outfitter-bot
+    harness: pi
+  credentials:
+    # outfitter-bot holds its own dedicated ai-outfitter-only machine
+    # account — it is not one of the shared-persona accounts (luce-unsup,
+    # vega-unsup) — so it needs no GITHUB_NOTIFY_ORGS split.
+    #
+    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
+    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
+    #   GITHUB_USER                    the machine account's login
+    - secret: agent-credentials
+      as: env
+  setup:
+    - name: catalog-bootstrap
+      script: |
+        set -eu
+        source_uri="git+https://github.com/ai-outfitter/.agents.git"
+        repository="${source_uri#git+}"
+        revision="__REVISION__"
+        profile="outfitter-bot"
+        cache_key="$(
+          printf '%s#%s' "$source_uri" "$revision" \
+            | base64 -w0 | tr '+/' '-_' | tr -d '='
+        )"
+        catalog="/workspace/.agents-cache/repos/$cache_key"
+        temporary="${catalog}.tmp.$$"
+        stale="${catalog}.stale.$$"
+        trap 'rm -rf "$temporary" "$stale"' EXIT
+
+        rm -rf "$temporary"
+        mkdir -p "$temporary"
+        git -C "$temporary" init --quiet
+        git -C "$temporary" remote add origin "$repository"
+        git -C "$temporary" fetch --quiet --depth 1 origin "$revision"
+        git -C "$temporary" checkout --quiet --detach FETCH_HEAD
+        test "$(git -C "$temporary" rev-parse HEAD)" = "$revision"
+        test -f "$temporary/agents/$profile/agent.md"
+        test -f "$temporary/mcp.json"
+
+        if [ -e "$catalog" ]; then
+          mv "$catalog" "$stale"
+        fi
+        mv "$temporary" "$catalog"
+        rm -rf "$stale"
+    - name: git-https-credential
+      script: |
+        set -eu
+        umask 077
+
+        : "${GITHUB_PERSONAL_ACCESS_TOKEN:?agent-credentials must provide GITHUB_PERSONAL_ACCESS_TOKEN}"
+        : "${GITHUB_USER:?agent-credentials must provide GITHUB_USER}"
+
+        askpass="${HOME}/.git-askpass"
+        cat >"$askpass" <<'ASKPASS'
+        #!/bin/sh
+        case "$1" in
+          *[Uu]sername*) printf '%s\n' "$GITHUB_USER" ;;
+          *[Pp]assword*) printf '%s\n' "$GITHUB_PERSONAL_ACCESS_TOKEN" ;;
+          *) exit 1 ;;
+        esac
+        ASKPASS
+        chmod 0700 "$askpass"
+
+        git config --global core.askPass "$askpass"
+        git config --global credential.helper ''
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
+  workspace:
+    resourceQuota:
+      hard:
+        requests.cpu: "2"
+        requests.memory: 4Gi
+        limits.cpu: "4"
+        limits.memory: 8Gi
+        requests.storage: 40Gi
+        persistentvolumeclaims: "4"
+        count/pods: "10"
+        count/jobs.batch: "20"
+        count/services: "5"
+        count/configmaps: "20"
+        count/secrets: "10"
+    limitRange:
+      container:
+        defaultRequest:
+          cpu: 100m
+          memory: 256Mi
+        default:
+          cpu: "1"
+          memory: 2Gi
+    volume:
+      size: 10Gi

@@ -1,0 +1,160 @@
+# Cluster authorization for the GitHub Actions deploy identity.
+#
+# Administrator-applied, NOT deployed by CI — the deploy identity must never
+# be able to widen its own permissions. Apply with an administrator
+# kubeconfig against the nonprod cluster (see deploy/RUNBOOK.md for the
+# access-entry command that maps the `ai-outfitter-catalog-deploy` IAM role
+# to the group below).
+#
+# The resourceNames lists mirror the `nonprod` entry in `clusters.yaml`:
+# every agent that entry names must appear in the agents list, and the
+# Organization those manifests declare must appear in the organizations
+# list. The deploy preflight asserts both directions — a newly named agent
+# fails its deploy with the exact entry to add here, and an entry here the
+# clusters.yaml entry no longer names is the drift the denial checks exist to
+# catch. Adding an agent is deliberately a two-person change: CI cannot
+# create it, and this file cannot be applied by CI.
+#
+# No __ORG__ or __REVISION__ tokens here — this file is applied by hand, not
+# rendered by deploy-catalog, so every name is the literal rendered form.
+#
+# Every rule is resourceNames-scoped and there is no `create`, no `delete`,
+# and no Secrets access anywhere: CI can move existing agents to a new
+# catalog revision, but it cannot bring an agent into being, mint a
+# credential, or touch the operator. Bootstrap remains an administrator's
+# job.
+#
+# The missing `delete` on agents matters more than it looks. `Agent` is
+# cluster-scoped and owns its namespace by owner reference, so deleting one
+# cascade-deletes every Secret, ConfigMap, and PVC beneath it — including the
+# workspace volume carrying Pi's authentication, with a StorageClass whose
+# reclaim policy is `Delete`. An identity able to delete an Agent can destroy
+# the credentials it is deliberately not allowed to read. See
+# deploy/RUNBOOK.md's migration section for the incident this rule exists
+# because of.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ai-outfitter-catalog-deploy
+rules:
+  # Cluster-scoped because Organization and Agent are cluster-scoped
+  # resources. Narrowed to exactly the objects the catalog tree declares.
+  - apiGroups: ["aioutfitter.com"]
+    resources: ["organizations"]
+    resourceNames: ["outfitter"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["aioutfitter.com"]
+    resources: ["agents"]
+    resourceNames:
+      ["outfitter-luce", "outfitter-vega", "outfitter-outfitter-bot"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ai-outfitter-catalog-deploy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ai-outfitter-catalog-deploy
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: ai-outfitter-catalog-deploy
+---
+# One Role+RoleBinding pair per agent namespace, because `kubectl rollout
+# status` watches through an informer that LISTs first, and RBAC cannot
+# resourceName-scope a list — a names-scoped rule here denies the watch with
+# "cannot list deployments". `list`, not `patch`: the operator owns these
+# Deployments. CI observes the rollout it caused; it never forces one. Each
+# namespace holds only its own agent's runtime. YAML anchors do not cross
+# document boundaries, so the three pairs are spelled out.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ai-outfitter-catalog-deploy
+  namespace: agent-outfitter-luce
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-outfitter-catalog-deploy
+  namespace: agent-outfitter-luce
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ai-outfitter-catalog-deploy
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: ai-outfitter-catalog-deploy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ai-outfitter-catalog-deploy
+  namespace: agent-outfitter-vega
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-outfitter-catalog-deploy
+  namespace: agent-outfitter-vega
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ai-outfitter-catalog-deploy
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: ai-outfitter-catalog-deploy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ai-outfitter-catalog-deploy
+  namespace: agent-outfitter-outfitter-bot
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-outfitter-catalog-deploy
+  namespace: agent-outfitter-outfitter-bot
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ai-outfitter-catalog-deploy
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: ai-outfitter-catalog-deploy

@@ -1,0 +1,30 @@
+# Which agents this catalog deploys, and the deployment prefix they render
+# under.
+#
+# `organization` is a short deployment prefix chosen by this catalog — it
+# does NOT need to equal the GitHub organization login. deploy-catalog
+# renders it into `__ORG__` wherever a manifest uses that placeholder, the
+# same way `__REVISION__` is rendered from the merge commit — so an Agent's
+# cluster-scoped name carries the prefix (`outfitter-luce`, not bare `luce`)
+# without a copy-pasted string in every file. `outfitter` was chosen over the
+# full `ai-outfitter` login to keep names short and because it also softens
+# the outfitter-bot stutter: `outfitter-outfitter-bot`, not
+# `ai-outfitter-outfitter-bot`. This rendering is a feature in flight on
+# ai-outfitter/agent-operator#46; until it merges, a deploy against the pin in
+# .github/workflows/deploy.yml fails the action's own manifest-name assertion
+# (see the DO NOT MERGE comment there).
+#
+# `clusters.<name>.agents` is the deploy list. `deploy-catalog` deploys
+# exactly the agents named here — nothing is discovered — so a manifest under
+# `agents/` is inert until a cluster names it. Adding an agent is this edit,
+# reviewed like any other, and it is deliberately a two-person change: CI
+# cannot create an Agent or an Organization, and the deploy role's
+# `resourceNames` (deploy/rbac.yaml) must already cover it or the permission
+# preflight fails before anything is applied.
+organization: outfitter
+clusters:
+  nonprod:
+    agents:
+      - luce
+      - vega
+      - outfitter-bot

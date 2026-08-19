@@ -1,0 +1,202 @@
+# Luce's fleet declaration. deploy-catalog selects agents from clusters.yaml,
+# so this file's existence is what puts Luce in the fleet once `luce` is named
+# there, and CI renders __REVISION__ with the merge commit that produced it:
+# the profile beside this file and the revision the cluster resolves are the
+# same commit by construction. __ORG__ renders to the deployment prefix named
+# in clusters.yaml (outfitter — a short prefix, not the ai-outfitter GitHub
+# login) — see that file's header for why the Agent name carries it.
+#
+# Bootstrap is an administrator's, not CI's: the agent-__ORG__-luce namespace
+# and the agent-credentials Secret must exist before the first deploy, and the
+# deploy role needs __ORG__-luce in its resourceNames. See deploy/RUNBOOK.md.
+#
+# `Agent` is CLUSTER-SCOPED and owns its namespace, and one Luce persona is
+# deployed once per organization — so the Agent name carries the
+# organization. `Agent/__ORG__-luce` gets namespace `agent-__ORG__-luce`, its
+# own quota, and its own Secret, and can never collide with another
+# organization's Luce on a shared cluster. A bare `Agent/luce` would: applying
+# it where another org's Luce holds that name takes over the object, and
+# deleting or renaming an Agent cascade-deletes its namespace including the
+# workspace PVC.
+#
+# deploy-catalog requires this directory's name to equal the profile id
+# (`luce`) and requires the manifest to declare the Agent name the id
+# promises, prefixed with the rendered organization; the profile it runs
+# stays `agents/luce` via spec.profile.agent.
+apiVersion: aioutfitter.com/v1alpha1
+kind: Organization
+metadata:
+  name: __ORG__
+spec:
+  displayName: AI Outfitter
+  agentCatalogs:
+    # Public catalog: it resolves anonymously, so no catalog credential and no
+    # private-catalog setup step. The name must match the workflow's
+    # catalog-source input, which is what convergence is checked against.
+    # Identical, byte-for-byte after render, to the Organization block in
+    # agents/vega/deployment.yaml and agents/outfitter-bot/deployment.yaml.
+    # Duplicated deliberately rather than defined once: cluster selection in
+    # clusters.yaml is per agent, and a future edit that deploys a subset of
+    # this fleet must not leave the Organization pin stale because the one
+    # file that carried it wasn't in that subset. Server-side apply makes the
+    # duplication harmless — three identical applies converge to one object.
+    - name: ai-outfitter-agents
+      github: ai-outfitter/.agents
+      revision: __REVISION__
+---
+apiVersion: aioutfitter.com/v1alpha1
+kind: Agent
+metadata:
+  name: __ORG__-luce
+spec:
+  memberships:
+    - organization: __ORG__
+  profile:
+    agent: luce
+    harness: pi
+  credentials:
+    # One Secret carries every credential this agent needs, projected as env.
+    # The keys are the standard forge names plus GITHUB_NOTIFY_ORGS — nothing
+    # else is namespaced to this agent, so the same Secret shape works for any
+    # GitHub-backed agent in the fleet.
+    #
+    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
+    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
+    #   GITHUB_USER                    the machine account's login
+    #   GITHUB_NOTIFY_ORGS             ai-outfitter — see deploy/RUNBOOK.md
+    #
+    # GITHUB_NOTIFY_ORGS is documented as a runtime ConfigMap key elsewhere in
+    # this org's planning notes; it is set here in agent-credentials instead,
+    # to keep this catalog's one-Secret-per-agent convention (see the
+    # "no side ConfigMap" rule this file's predecessor established) rather
+    # than opening a second, credential-adjacent config surface per agent. The
+    # env var name and behavior are unchanged.
+    #
+    # Everything else is left to its default: the channels source already
+    # defaults to the reasons this agent wants, and to a 60s poll floor, and
+    # auto-detects the sources whose credentials are present. See
+    # deploy/RUNBOOK.md.
+    - secret: agent-credentials
+      as: env
+  setup:
+    # The runtime is offline (`outfitter run --strict`): it never fetches a
+    # catalog at startup. This step clones the org catalog at the pinned
+    # revision into the exact path Outfitter derives for a remote source, so
+    # resolution succeeds with no runtime egress beyond this clone, and
+    # asserts the clone actually carries the `luce` profile before the agent
+    # container starts on it.
+    - name: catalog-bootstrap
+      script: |
+        set -eu
+        source_uri="git+https://github.com/ai-outfitter/.agents.git"
+        repository="${source_uri#git+}"
+        revision="__REVISION__"
+        profile="luce"
+        cache_key="$(
+          printf '%s#%s' "$source_uri" "$revision" \
+            | base64 -w0 | tr '+/' '-_' | tr -d '='
+        )"
+        catalog="/workspace/.agents-cache/repos/$cache_key"
+        temporary="${catalog}.tmp.$$"
+        stale="${catalog}.stale.$$"
+        trap 'rm -rf "$temporary" "$stale"' EXIT
+
+        rm -rf "$temporary"
+        mkdir -p "$temporary"
+        git -C "$temporary" init --quiet
+        git -C "$temporary" remote add origin "$repository"
+        git -C "$temporary" fetch --quiet --depth 1 origin "$revision"
+        git -C "$temporary" checkout --quiet --detach FETCH_HEAD
+        test "$(git -C "$temporary" rev-parse HEAD)" = "$revision"
+        test -f "$temporary/agents/$profile/agent.md"
+        test -f "$temporary/mcp.json"
+
+        if [ -e "$catalog" ]; then
+          mv "$catalog" "$stale"
+        fi
+        mv "$temporary" "$catalog"
+        rm -rf "$stale"
+
+        # Luce's profile may resolve TRANSITIVELY: settings.yml pins
+        # community-profiles by release tag, and outfitter run does not fetch
+        # remote sources itself. Pre-populate that cache too, keyed by the
+        # same uri#ref rule, even while agents/luce/agent.md carries a direct
+        # copy — this logic stays correct the moment that copy is retired in
+        # favor of the transitive profile. Bump the tag here and in
+        # settings.yml together.
+        cp_uri="git+https://github.com/ai-outfitter/community-profiles.git"
+        cp_repo="${cp_uri#git+}"
+        cp_ref="v1.4.0"
+        cp_key="$(
+          printf '%s#%s' "$cp_uri" "$cp_ref" \
+            | base64 -w0 | tr '+/' '-_' | tr -d '='
+        )"
+        cp_catalog="/workspace/.agents-cache/repos/$cp_key"
+        cp_tmp="${cp_catalog}.tmp.$$"
+        trap 'rm -rf "$temporary" "$stale" "$cp_tmp"' EXIT
+        rm -rf "$cp_tmp"
+        mkdir -p "$cp_tmp"
+        git -C "$cp_tmp" init --quiet
+        git -C "$cp_tmp" remote add origin "$cp_repo"
+        git -C "$cp_tmp" fetch --quiet --depth 1 origin "refs/tags/$cp_ref"
+        git -C "$cp_tmp" checkout --quiet --detach FETCH_HEAD
+        test -f "$cp_tmp/agents/luce/agent.md"
+        if [ -e "$cp_catalog" ]; then rm -rf "$cp_catalog"; fi
+        mv "$cp_tmp" "$cp_catalog"
+    # Luce pushes her branch with git over HTTPS: the runtime image has git but
+    # no gh, curl, or wget. GIT_ASKPASS answers the credential prompt from the
+    # environment, so the token never lands on disk and never appears in a
+    # remote URL or in .git/config.
+    #
+    # Identity is derived from GITHUB_USER rather than configured separately —
+    # <login>@users.noreply.github.com is the address GitHub attributes commits
+    # with, so deriving it keeps attribution correct with nothing to set.
+    - name: git-https-credential
+      script: |
+        set -eu
+        umask 077
+
+        : "${GITHUB_PERSONAL_ACCESS_TOKEN:?agent-credentials must provide GITHUB_PERSONAL_ACCESS_TOKEN}"
+        : "${GITHUB_USER:?agent-credentials must provide GITHUB_USER}"
+
+        askpass="${HOME}/.git-askpass"
+        cat >"$askpass" <<'ASKPASS'
+        #!/bin/sh
+        case "$1" in
+          *[Uu]sername*) printf '%s\n' "$GITHUB_USER" ;;
+          *[Pp]assword*) printf '%s\n' "$GITHUB_PERSONAL_ACCESS_TOKEN" ;;
+          *) exit 1 ;;
+        esac
+        ASKPASS
+        chmod 0700 "$askpass"
+
+        git config --global core.askPass "$askpass"
+        # No credential helper: askPass is the only source, so a stale or wrong
+        # token fails instead of silently reusing a cached one.
+        git config --global credential.helper ''
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
+  workspace:
+    resourceQuota:
+      hard:
+        requests.cpu: "2"
+        requests.memory: 4Gi
+        limits.cpu: "4"
+        limits.memory: 8Gi
+        requests.storage: 40Gi
+        persistentvolumeclaims: "4"
+        count/pods: "10"
+        count/jobs.batch: "20"
+        count/services: "5"
+        count/configmaps: "20"
+        count/secrets: "10"
+    limitRange:
+      container:
+        defaultRequest:
+          cpu: 100m
+          memory: 256Mi
+        default:
+          cpu: "1"
+          memory: 2Gi
+    volume:
+      size: 10Gi
