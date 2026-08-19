@@ -191,7 +191,7 @@ this agent, so the same shape works for any agent in the fleet.
 ```sh
 kubectl create namespace agent-luce-ai-outfitter
 
-kubectl -n agent-luce-ai-outfitter create secret generic luce-forge \
+kubectl -n agent-luce-ai-outfitter create secret generic agent-credentials \
   --from-literal=GITHUB_NOTIFY_TOKEN='ghp_replace_with_the_classic_notifications_token' \
   --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_replace_with_the_fine_grained_token' \
   --from-literal=GITHUB_USER='luce-machine-account'
@@ -208,7 +208,7 @@ Prefix the command with a space (with `HISTCONTROL=ignorespace` set) or
 Check the keys landed, without printing any value:
 
 ```sh
-kubectl -n agent-luce-ai-outfitter get secret luce-forge -o jsonpath='{.data}' | jq -r 'keys[]'
+kubectl -n agent-luce-ai-outfitter get secret agent-credentials -o jsonpath='{.data}' | jq -r 'keys[]'
 ```
 
 Expected, exactly:
