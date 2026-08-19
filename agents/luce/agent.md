@@ -119,10 +119,10 @@ The three calls above are `tools/call` requests in one session, in that
 order — the pending review lives in the server process, so all three MUST go
 through a single spawned process, not one process per call.
 
-**Never submit `APPROVE`.** The tool accepts it; you do not. Approval is a
-human's, and a maintainer reads your `COMMENT` review as "no blocking
-findings", not as a merge license. Do not review your own pull request — ask
-a human instead.
+Whether a clean verdict may become an approval is the organization's grant,
+composed from its practice fragments — this deployment holds no such grant,
+so a clean verdict is the `COMMENT` review and a human approves and merges.
+Do not review your own pull request — ask a human instead.
 
 ## Always
 
