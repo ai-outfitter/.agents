@@ -5,7 +5,7 @@
 # construction.
 #
 # Bootstrap is an administrator's, not CI's: the agent-luce-ai-outfitter namespace and the
-# luce-forge Secret must exist before the first deploy, and the deploy role
+# agent-credentials Secret must exist before the first deploy, and the deploy role
 # needs luce in its resourceNames. See agents/luce/README.md.
 # `Agent` is CLUSTER-SCOPED and owns its namespace, and one Luce persona is
 # deployed once per organization — so the Agent name carries the organization.
@@ -54,7 +54,7 @@ spec:
     # Everything else is left to its default: the channels source already
     # defaults to the reasons this agent wants, and to a 60s poll floor, and
     # auto-detects the sources whose credentials are present. See RUNBOOK.md.
-    - secret: luce-forge
+    - secret: agent-credentials
       as: env
   setup:
     # Luce pushes her branch with git over HTTPS: the runtime image has git but
@@ -70,8 +70,8 @@ spec:
         set -eu
         umask 077
 
-        : "${GITHUB_PERSONAL_ACCESS_TOKEN:?luce-forge must provide GITHUB_PERSONAL_ACCESS_TOKEN}"
-        : "${GITHUB_USER:?luce-forge must provide GITHUB_USER}"
+        : "${GITHUB_PERSONAL_ACCESS_TOKEN:?agent-credentials must provide GITHUB_PERSONAL_ACCESS_TOKEN}"
+        : "${GITHUB_USER:?agent-credentials must provide GITHUB_USER}"
 
         askpass="${HOME}/.git-askpass"
         cat >"$askpass" <<'ASKPASS'

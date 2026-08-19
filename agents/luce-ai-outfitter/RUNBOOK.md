@@ -125,6 +125,28 @@ organization, so the worst outcome of a foreign wake is a wake that produces
 nothing. Expect those in the logs; they are the design. The profile tells Luce
 to settle such a task without acting or commenting.
 
+## The `agent-credentials` convention
+
+Every resident agent's environment comes from **one Secret named
+`agent-credentials`, in the agent's own namespace**. The namespace is what
+scopes it — `agent-<name>` is unique per agent — so the Secret's name never
+varies, nothing is namespaced to one identity, and every manifest, runbook,
+and rotation command in the fleet reads the same way.
+
+Rules:
+
+- One `agent-credentials` Secret per agent namespace, projected `as: env`.
+  All credentials and any non-default environment go in it; there is no
+  side ConfigMap.
+- Keys are the standard names, never agent-prefixed: `GITHUB_NOTIFY_TOKEN`,
+  `GITHUB_PERSONAL_ACCESS_TOKEN`, `GITHUB_USER`, `OPENAI_API_KEY`, and so on.
+- Image-pull credentials are the one exception: `ghcr-pull` is consumed by the
+  kubelet through the ServiceAccount, not by the process environment, so it
+  stays its own Secret.
+- Rotation is always: `kubectl patch secret agent-credentials` with the new
+  values, then `kubectl rollout restart deployment/agent-runtime` — the
+  environment is read at process start.
+
 ## How the operator delivers this
 
 Verified against `ai-outfitter/agent-operator`, because the shape here depends
@@ -151,7 +173,7 @@ then restart the agent's Deployment — the values are read into the process
 environment at start, so a running pod keeps the old ones:
 
 ```sh
-kubectl -n agent-luce-ai-outfitter create secret generic luce-forge \
+kubectl -n agent-luce-ai-outfitter create secret generic agent-credentials \
   --from-literal=GITHUB_NOTIFY_TOKEN='ghp_the_new_classic_token' \
   --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_the_new_fine_grained_token' \
   --from-literal=GITHUB_USER='luce-machine-account' \
