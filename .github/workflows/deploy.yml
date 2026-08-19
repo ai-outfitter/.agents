@@ -43,7 +43,7 @@ jobs:
       id-token: write
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       # Pinned and checksummed: a deploy identity should not be handed a
       # binary resolved at run time from a moving `latest`.
@@ -61,7 +61,7 @@ jobs:
           sudo install -m 0755 kubectl /usr/local/bin/kubectl
 
       - name: Assume the ai-outfitter catalog deploy role
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::216577824627:role/ai-outfitter-catalog-deploy
