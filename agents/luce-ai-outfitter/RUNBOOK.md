@@ -74,6 +74,17 @@ curl -sS -o /dev/null -w '%header{x-oauth-scopes}\n' \
   -H "Authorization: Bearer $GITHUB_NOTIFY_TOKEN" https://api.github.com/notifications
 ```
 
+**The fine-grained token must be approved by the organization.** Minting it
+is not the last step: when the organization's fine-grained-PAT policy requires
+approval, the token sits pending in
+`github.com/organizations/ai-outfitter/settings/personal-access-token-requests`
+until an owner approves it — and *editing an approved token's permissions can
+put it back into that queue*. An unapproved token does not error at mint time;
+it simply acts with read-only access, so the deployment presents as an agent
+that wakes, implements, and then gets `403` on the branch push and even on the
+issue comment, reporting `push: false`. Observed live on 2026-08-19. If every
+write 403s while reads work, check the approval queue before rotating anything.
+
 **Repository work must not be classic.** The shortcut is to add `repo` to the
 classic token and use one credential everywhere. `repo` grants write access to
 code, collaborators, and webhooks on *every* repository the account can reach,
