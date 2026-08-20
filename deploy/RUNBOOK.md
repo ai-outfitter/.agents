@@ -113,6 +113,17 @@ The `oft-` marker identifies a token as Outfitter-fleet-managed. A token on a
 machine account MUST carry the `oft-` note prefix. Treat a token without it as
 unmanaged: investigate it or revoke it.
 
+The same grammar covers each agent's OpenAI key. Mint it in a dedicated
+OpenAI project that has a budget set — one key per deployment; project
+naming is free-form (the current fleet keys live in a project named
+`ai-outfitter/unsupervised`), and users MAY structure projects in a more
+complex way when they need it. The key name MUST be
+`oft-<org-prefix>-<agent>-model`: `oft-outfitter-luce-model`,
+`oft-outfitter-vega-model`, `oft-outfitter-outfitter-bot-model`. The role
+is `model`, not the vendor name, so the convention survives a provider
+change, and the unmanaged-key audit rule applies to fleet projects too.
+
+
 Slack tokens are out of scope for this convention; name them from the Slack
 app they belong to.
 
