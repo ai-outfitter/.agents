@@ -15,14 +15,10 @@ merged as of 2026-08-19: `organization` is a short deployment prefix, not
 necessarily the GitHub org login, and this catalog deliberately chose
 `outfitter` rather than `ai-outfitter` — shorter, and it also avoids the
 `ai-outfitter-outfitter-bot` stutter (rendering `outfitter-outfitter-bot`
-instead). The pin in `deploy.yml` (`f20777b62b1106c284c258b8495874a1fe10e2c8`)
-is the head of `ai-outfitter/agent-operator#46` on that date, includes
-`__ORG__` rendering, and even documents `organization: outfitter` as this
-catalog's own example — but the pull request itself is still open, so this
-pin is an unreviewed branch tip. Re-check
-`gh api repos/ai-outfitter/agent-operator/branches/feat%2Fdeploy-catalog-clusters --jq .commit.sha`
-before merging this catalog's PR, and repin to a **merged** SHA (or a release
-tag containing it).
+instead). The pin in `deploy.yml` (`ea7e0706297d4884a457df0cc6236011a349f021`)
+is the squash-merge of `ai-outfitter/agent-operator#46` on `main`
+(merged 2026-08-20). It includes `__ORG__` rendering and documents
+`organization: outfitter` as this catalog's own example.
 
 ## 1. IAM role for the deploy identity
 

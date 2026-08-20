@@ -83,24 +83,18 @@ jobs:
           esac
           aws eks update-kubeconfig --name nonprod --region us-east-1
 
-      # ⚠ DO NOT MERGE ON THIS PIN. f20777b62b1106c284c258b8495874a1fe10e2c8 is
-      # the head of the still-unmerged ai-outfitter/agent-operator#46 as of
-      # 2026-08-19. It carries the `cluster` input this workflow depends on,
-      # the `__ORG__`-rendering this catalog's manifests need, and a doc
-      # commit that names `organization: outfitter` for this catalog by
-      # example — matching what clusters.yaml declares. PR #46 itself is
-      # still open, so this pin is an unreviewed branch tip, not a release —
-      # verify before trusting this comment over the branch:
-      # `gh api repos/ai-outfitter/agent-operator/branches/feat%2Fdeploy-catalog-clusters --jq .commit.sha`
-      # Repin to a merged SHA — or a release tag containing it — before this
-      # lands.
+      # ea7e070 is the squash-merge of ai-outfitter/agent-operator#46 on main.
+      # It carries the `cluster` input this workflow depends on, the
+      # `__ORG__`-rendering this catalog's manifests need, and the doc commit
+      # that names `organization: outfitter` for this catalog by example —
+      # matching what clusters.yaml declares.
       #
       # Exact-SHA pin, updated deliberately: this action patches custom
       # resources whose API group already changed once (link.aioutfitter.com
       # → aioutfitter.com), so the deploy step and the CRDs it patches move
       # as one bump.
       - name: Deploy the nonprod cluster
-        uses: ai-outfitter/agent-operator/actions/deploy-catalog@f20777b62b1106c284c258b8495874a1fe10e2c8
+        uses: ai-outfitter/agent-operator/actions/deploy-catalog@ea7e0706297d4884a457df0cc6236011a349f021
         with:
           cluster: nonprod
           revision: ${{ github.sha }}
