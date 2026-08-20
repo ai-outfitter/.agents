@@ -26,7 +26,7 @@ mcp:
 # spend per agent. The deployment's Secret supplies it; without a selected
 # model the runtime has no credential and every wake dies with "No API key
 # found for the selected model".
-model: openai/gpt-5.6-sol
+model: openai/gpt-5.6-luna
 extensions:
   # channels v1.6.1 (A2A task plane) by its release commit: tag v1.6.1 =
   # 03fb6d2, the current main tip. The relay wire protocol is unversioned,
