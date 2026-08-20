@@ -73,6 +73,62 @@ personas also use. What is per organization is the **credential pair**, not
 the account: mint this deployment's own tokens, never reuse another
 deployment's.
 
+### Token note names
+
+One GitHub account can serve more than one org-scoped deployment — for
+example, `luce-unsup` also serves the `Unsupervisedcom` deployment. The
+account's token list is flat, so the note is the only thing that tells two
+deployments' tokens apart. The note is also the first link in a chain a
+human can grep: token note → secret key → namespace agent → CR name.
+
+When you mint a GitHub token for an agent in this catalog, you MUST set its
+note to `oft-<org-prefix>-<agent>-<role>`:
+
+- `org-prefix` is this catalog's `organization` value in
+  [`clusters.yaml`](../clusters.yaml) — `outfitter`.
+- `agent` is the agent ID, matching its directory under `agents/`.
+- `role` is the key the token fills: `work` for
+  `GITHUB_PERSONAL_ACCESS_TOKEN`, `notify` for `GITHUB_NOTIFY_TOKEN`.
+
+| Agent | Env key | Token note |
+| --- | --- | --- |
+| `luce` | `GITHUB_PERSONAL_ACCESS_TOKEN` | `oft-outfitter-luce-work` |
+| `luce` | `GITHUB_NOTIFY_TOKEN` | `oft-outfitter-luce-notify` |
+| `vega` | `GITHUB_PERSONAL_ACCESS_TOKEN` | `oft-outfitter-vega-work` |
+| `vega` | `GITHUB_NOTIFY_TOKEN` | `oft-outfitter-vega-notify` |
+| `outfitter-bot` | `GITHUB_PERSONAL_ACCESS_TOKEN` | `oft-outfitter-outfitter-bot-work` |
+| `outfitter-bot` | `GITHUB_NOTIFY_TOKEN` | `oft-outfitter-outfitter-bot-notify` |
+
+This catalog has no `CATALOG_TOKEN` key, so there is no `catalog` role here.
+If you ever mint a per-agent `read:packages` PAT for `ghcr-pull` instead of
+reusing a shared one, set its note to `oft-outfitter-<agent>-ghcr`.
+
+A fine-grained PAT name MUST be unique per account, and GitHub caps it at 40
+characters — this convention's longest current value,
+`oft-outfitter-outfitter-bot-notify`, is 30 characters. A classic token note has
+no such uniqueness check, so this convention is the only guard against two
+classic tokens sharing one ambiguous name.
+
+The `oft-` marker identifies a token as Outfitter-fleet-managed. A token on a
+machine account MUST carry the `oft-` note prefix. Treat a token without it as
+unmanaged: investigate it or revoke it.
+
+The same grammar covers each agent's OpenAI key. Mint it in a dedicated
+OpenAI project that has a budget set — one key per deployment; project
+naming is free-form (the current fleet keys live in a project named
+`ai-outfitter/unsupervised`), and users MAY structure projects in a more
+complex way when they need it. We suggest the key name
+`oft-<org-prefix>-<agent>-model`: `oft-outfitter-luce-model`,
+`oft-outfitter-vega-model`, `oft-outfitter-outfitter-bot-model`. The role
+is `model`, not the vendor name, so the convention survives a provider
+change. These names are a suggestion, not a gate — OpenAI key names carry
+no enforcement; following the grammar keeps the key greppable against the
+secret key, the namespace, and the CR.
+
+
+Slack tokens are out of scope for this convention; name them from the Slack
+app they belong to.
+
 | Variable | Kind | Scope |
 | --- | --- | --- |
 | `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
@@ -106,6 +162,10 @@ namespace, everything projected `as: env`** — no side ConfigMap. Set
 `GITHUB_NOTIFY_ORGS` as a fourth key in that same Secret rather than opening a
 second config surface:
 
+Set the token note to exactly `oft-outfitter-luce-notify` when you create the
+classic token, and to exactly `oft-outfitter-luce-work` when you create the
+fine-grained token.
+
 ```sh
 kubectl create namespace agent-outfitter-luce
 
@@ -116,9 +176,11 @@ kubectl -n agent-outfitter-luce create secret generic agent-credentials \
   --from-literal=GITHUB_NOTIFY_ORGS='ai-outfitter'
 ```
 
-Repeat for `agent-outfitter-vega` with `vega-unsup`, and for
+Repeat for `agent-outfitter-vega` with `vega-unsup` (token notes
+`oft-outfitter-vega-notify` and `oft-outfitter-vega-work`), and for
 `agent-outfitter-outfitter-bot` with its dedicated account and no
-`GITHUB_NOTIFY_ORGS` key.
+`GITHUB_NOTIFY_ORGS` key (token notes `oft-outfitter-outfitter-bot-notify` and
+`oft-outfitter-outfitter-bot-work`).
 
 Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
 `unset HISTFILE` first, so tokens do not land in shell history. Verify the
