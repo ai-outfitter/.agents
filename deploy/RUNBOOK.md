@@ -117,11 +117,13 @@ The same grammar covers each agent's OpenAI key. Mint it in a dedicated
 OpenAI project that has a budget set — one key per deployment; project
 naming is free-form (the current fleet keys live in a project named
 `ai-outfitter/unsupervised`), and users MAY structure projects in a more
-complex way when they need it. The key name MUST be
+complex way when they need it. We suggest the key name
 `oft-<org-prefix>-<agent>-model`: `oft-outfitter-luce-model`,
 `oft-outfitter-vega-model`, `oft-outfitter-outfitter-bot-model`. The role
 is `model`, not the vendor name, so the convention survives a provider
-change, and the unmanaged-key audit rule applies to fleet projects too.
+change. These names are a suggestion, not a gate — OpenAI key names carry
+no enforcement; following the grammar keeps the key greppable against the
+secret key, the namespace, and the CR.
 
 
 Slack tokens are out of scope for this convention; name them from the Slack
