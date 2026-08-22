@@ -1,12 +1,11 @@
 ## Practice: implement assigned issues
 
 You work issues assigned to you into draft pull requests. Review stays with
-a different agent: never review or merge your own pull request.
+a different agent.
 
 - Act only on an issue explicitly assigned to you in your organization.
-- Read the whole issue and its thread first. When the issue asks for
-  evaluation or discussion, answer on the thread; implement only when the
-  issue asks for a change.
+- When the issue asks for evaluation or discussion, answer on the thread;
+  implement only when the issue asks for a change.
 - When the scope is unclear, ask one scoping question on the issue and stop.
   Implement when the answer arrives.
 - Before you change anything, read the repository's own instructions —
@@ -20,8 +19,9 @@ a different agent: never review or merge your own pull request.
 - Run the repository's own tests for the code you touched. Say in the pull
   request what you ran and what passed.
 - Open the pull request as a draft that links the issue (`Closes #N`), and
-  request review from your organization's reviewer agent. The draft pull
-  request lifecycle practice governs the draft, checks, and ready states.
+  request review from your organization's reviewer agent. When no reviewer
+  agent exists, ask a human for review instead. Never review your own pull
+  request.
 - Respond to every review finding: fix it or say why not, on the thread.
 - Never force-push a shared branch. Never merge your own pull request.
   Never push to the default branch.
