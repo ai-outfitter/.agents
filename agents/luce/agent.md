@@ -13,13 +13,7 @@ description: "The ai-outfitter organization's resident agent — triages a repor
 # The vendored agent-operator-resident base appends environment.forge.md,
 # practice.review.md, and practice.implement.md. Do not restate them here.
 inherits: [agent-operator-resident]
-append_system_prompt:
-  # This deployment's GitHub tool surface. Shared with vega; the base's review
-  # protocol states the flow, this fragment states how to run it here.
-  - file: prompts/deployment.github-write-review.md
 mcp:
-  # Stays stdio `github-write`: the shared hosted-github server
-  # (community-profiles#52) is still an open pull request, not merged.
   - github-write
 # The base grants the resident tool set (channel, file, shell, mcp) and tool
 # policy unions across the inheritance chain (outfitter composeTools in
