@@ -1,0 +1,11 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: nonprod
+  region: us-east-1
+iamIdentityMappings:
+  - arn: arn:aws:iam::216577824627:role/ai-outfitter-catalog-deploy-nonprod
+    username: ai-outfitter-catalog-deploy-nonprod
+    groups:
+      - ai-outfitter-catalog-deploy-nonprod
+    noDuplicateARNs: true
