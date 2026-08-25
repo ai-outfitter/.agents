@@ -7,65 +7,101 @@ exactly that set. CI only **moves objects that already exist**; this document
 is what an administrator does once, by hand, before the first deploy of a new
 agent.
 
-## Dependency: agent-operator PR #46 must merge
+## Dependency: use a released agent-operator checkout
 
-`clusters.yaml`'s `organization: outfitter` key and the `__ORG__` token in
-every `deployment.yaml` depend on a `deploy-catalog` feature that has not
-merged as of 2026-08-19: `organization` is a short deployment prefix, not
-necessarily the GitHub org login, and this catalog deliberately chose
-`outfitter` rather than `ai-outfitter` — shorter, and it also avoids the
-`ai-outfitter-outfitter-bot` stutter (rendering `outfitter-outfitter-bot`
-instead). The pin in `deploy.yml` (`ea7e0706297d4884a457df0cc6236011a349f021`)
-is the squash-merge of `ai-outfitter/agent-operator#46` on `main`
-(merged 2026-08-20). It includes `__ORG__` rendering and documents
-`organization: outfitter` as this catalog's own example.
+The IAM role is defined by agent-operator's shared
+`actions/deploy-catalog/aws/identity-stack.yaml` CloudFormation template.
+Use the `agent-operator-v0.9.0` checkout when running the bootstrap commands
+below. The catalog owns only the environment-specific parameters, the
+`aws-auth` mapping, and Kubernetes RBAC.
 
-## 1. IAM role for the deploy identity
+## 1. Confirm the cluster supports `aws-auth`
 
-Create `ai-outfitter-catalog-deploy` in account `216577824627` (the account the
-shared nonprod cluster lives in), trusted only by this repository on `main`.
-
-Trust policy condition:
-
-```json
-{
-  "StringEquals": {
-    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-    "token.actions.githubusercontent.com:sub": "repo:ai-outfitter/.agents:ref:refs/heads/main"
-  }
-}
-```
-
-The role needs only `eks:DescribeCluster` on the `nonprod` cluster; Kubernetes
-authorization comes from the access entry below, not from IAM.
-
-## 2. Map the role to a Kubernetes identity
-
-Check whether the cluster's authentication mode is `CONFIG_MAP`, `API`, or
-`API_AND_CONFIG_MAP` before choosing a mechanism (`aws eks describe-cluster
---name nonprod --query cluster.accessConfig`). For an EKS access entry:
+This rollout deliberately uses the existing, tested `aws-auth` mechanism.
+Check the cluster before changing anything:
 
 ```sh
-aws eks create-access-entry \
-  --cluster-name nonprod \
+authentication_mode="$(aws eks describe-cluster \
+  --name nonprod \
   --region us-east-1 \
-  --principal-arn arn:aws:iam::216577824627:role/ai-outfitter-catalog-deploy \
-  --type STANDARD \
-  --username ai-outfitter-catalog-deploy \
-  --kubernetes-groups ai-outfitter-catalog-deploy
+  --query 'cluster.accessConfig.authenticationMode' \
+  --output text)"
+
+case "$authentication_mode" in
+  CONFIG_MAP|API_AND_CONFIG_MAP) ;;
+  API)
+    echo 'STOP: nonprod is API-only; this runbook cannot modify its authentication' >&2
+    exit 1
+    ;;
+  *)
+    echo "STOP: unexpected authentication mode: $authentication_mode" >&2
+    exit 1
+    ;;
+esac
 ```
 
-For an `aws-auth` ConfigMap cluster, add the equivalent `mapRoles` entry
-instead — see the account's own cluster documentation for the exact
-mechanism, since it is shared with other tenants of this cluster.
+An API-only result is a hard stop. Do not introduce another authentication
+mechanism or change the cluster authentication mode as part of this catalog
+rollout.
 
-## 3. Cluster authorization
+## 2. Create the environment IAM role
+
+From this catalog checkout, set `agent_operator_checkout` to an
+`agent-operator-v0.9.0` checkout and deploy the shared template with this
+catalog's reviewed parameters:
+
+```sh
+agent_operator_checkout=/path/to/agent-operator-v0.9.0
+
+aws cloudformation deploy \
+  --stack-name catalog-deploy-ai-outfitter-nonprod \
+  --template-file "$agent_operator_checkout/actions/deploy-catalog/aws/identity-stack.yaml" \
+  --parameter-overrides file://deploy/identity/nonprod.parameters.json \
+  --capabilities CAPABILITY_NAMED_IAM
+```
+
+The stack creates `ai-outfitter-catalog-deploy-nonprod`, trusts only
+`repo:ai-outfitter/.agents:ref:refs/heads/main`, and grants only
+`eks:DescribeCluster` for `nonprod`. It reuses the account's existing GitHub
+OIDC provider; it does not create another provider.
+
+## 3. Map the role through `aws-auth`
+
+Apply the reviewed eksctl `iamIdentityMappings` configuration. The mapping
+uses the same value for role name, Kubernetes username, and Kubernetes group,
+and `noDuplicateARNs: true` prevents a second mapping for this role ARN.
+
+```sh
+eksctl create iamidentitymapping \
+  --config-file deploy/identity/nonprod.aws-auth.yaml
+```
+
+Confirm the resulting `aws-auth` entry names
+`ai-outfitter-catalog-deploy-nonprod` as both username and group before
+continuing.
+
+## 4. Cluster authorization
 
 ```sh
 kubectl apply -f deploy/rbac.yaml
 ```
 
-## 4. Per-deployment secrets: two GitHub tokens each, for luce and vega
+`deploy/rbac.yaml` temporarily binds both
+`ai-outfitter-catalog-deploy-nonprod` and the legacy
+`ai-outfitter-catalog-deploy` group. Apply these dual bindings before the
+workflow assumes the new role so either workflow revision remains authorized
+during the cutover. The IAM role, `aws-auth` mapping, workflow, session name,
+and field manager use only the new environment-scoped identity.
+
+Do not remove the legacy subjects in this migration PR. A later cleanup PR
+MUST remove them from every ClusterRoleBinding and RoleBinding only after the
+new role completes two successful workflow runs with distinct GitHub OIDC
+sessions and passes a negative authorization test proving it cannot read
+Secrets, create or delete Agents, or modify another organization's Agents.
+Keep the legacy IAM role and `aws-auth` mapping until that cleanup is ready so
+rollback remains a workflow ARN change.
+
+## 5. Per-deployment secrets: two GitHub tokens each, for luce and vega
 
 Luce and Vega are **shared-persona accounts** (`luce-unsup`, `vega-unsup`) —
 the same GitHub machine accounts other organizations' deployments of these
@@ -140,7 +176,7 @@ other deployment of these personas — see the community-profiles catalog's
 own Luce documentation for the exact ruleset; the boundary is enforced by the
 forge, not by the token or the profile.
 
-## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
+## 6. Namespace, Secret, and image-pull setup — the rest of the checklist
 
 For each agent (`outfitter-luce`, `outfitter-vega`,
 `outfitter-outfitter-bot`):
