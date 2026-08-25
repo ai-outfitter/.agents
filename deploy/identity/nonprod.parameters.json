@@ -1,0 +1,30 @@
+[
+  {
+    "ParameterKey": "OrganizationSlug",
+    "ParameterValue": "ai-outfitter"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "nonprod"
+  },
+  {
+    "ParameterKey": "GitHubOrganization",
+    "ParameterValue": "ai-outfitter"
+  },
+  {
+    "ParameterKey": "GitHubRepository",
+    "ParameterValue": ".agents"
+  },
+  {
+    "ParameterKey": "GitHubRef",
+    "ParameterValue": "refs/heads/main"
+  },
+  {
+    "ParameterKey": "ClusterName",
+    "ParameterValue": "nonprod"
+  },
+  {
+    "ParameterKey": "OidcProviderArn",
+    "ParameterValue": "arn:aws:iam::216577824627:oidc-provider/token.actions.githubusercontent.com"
+  }
+]

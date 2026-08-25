@@ -45,6 +45,9 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
+      - name: Validate deploy identity configuration
+        run: bash deploy/identity/validate.sh
+
       # Pinned and checksummed: a deploy identity should not be handed a
       # binary resolved at run time from a moving `latest`.
       - name: Install kubectl
@@ -60,12 +63,12 @@ jobs:
           chmod 0700 kubectl
           sudo install -m 0755 kubectl /usr/local/bin/kubectl
 
-      - name: Assume the ai-outfitter catalog deploy role
+      - name: Assume the ai-outfitter nonprod catalog deploy role
         uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           aws-region: us-east-1
-          role-to-assume: arn:aws:iam::216577824627:role/ai-outfitter-catalog-deploy
-          role-session-name: ai-outfitter-catalog-deploy
+          role-to-assume: arn:aws:iam::216577824627:role/ai-outfitter-catalog-deploy-nonprod
+          role-session-name: ai-outfitter-catalog-deploy-nonprod
 
       # Identity is this workflow's job; the action asserts what the identity
       # can and cannot do, but never establishes it. The caller-ARN check
@@ -75,7 +78,7 @@ jobs:
           set -euo pipefail
           caller_arn="$(aws sts get-caller-identity --query Arn --output text)"
           case "$caller_arn" in
-            "arn:aws:sts::216577824627:assumed-role/ai-outfitter-catalog-deploy/"*) ;;
+            "arn:aws:sts::216577824627:assumed-role/ai-outfitter-catalog-deploy-nonprod/"*) ;;
             *)
               echo "refusing unexpected AWS identity: $caller_arn" >&2
               exit 1
@@ -99,4 +102,4 @@ jobs:
           cluster: nonprod
           revision: ${{ github.sha }}
           catalog-source: ai-outfitter-agents
-          field-manager: ai-outfitter-catalog-deploy
+          field-manager: ai-outfitter-catalog-deploy-nonprod
