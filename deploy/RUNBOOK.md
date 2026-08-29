@@ -201,6 +201,9 @@ helper MUST request the repository-scoped form.
 `scripts/forge-mcp-launch.js` obtains the role-selected token and starts
 `github-mcp-server`; `scripts/forge-git-askpass.js` supplies a repository-scoped
 implementer or reviewer token only to git's credential prompt. The MCP
+call driver, `scripts/forge-mcp-call.js`, performs the handshake and a JSON
+request list in one bash-spawned server process when the runtime does not
+project materialized MCP servers. The MCP
 definitions resolve the catalog checkout from the `ai-outfitter/.agents`
 source in `/workspace/.agents/settings.yml`, regardless of YAML key order or
 quoting, then compute
