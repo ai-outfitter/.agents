@@ -7,8 +7,11 @@ function validateRepository(repository) {
     throw new Error("invalid FORGE_REPOSITORY");
   }
   const organization = process.env.FORGE_ORGANIZATION;
-  if (repository !== undefined && organization && repository.split("/", 1)[0] !== organization) {
-    throw new Error("FORGE_REPOSITORY owner must equal FORGE_ORGANIZATION");
+  if (repository !== undefined) {
+    if (!organization) throw new Error("FORGE_ORGANIZATION is required");
+    if (repository.split("/", 1)[0] !== organization) {
+      throw new Error("FORGE_REPOSITORY owner must equal FORGE_ORGANIZATION");
+    }
   }
 }
 

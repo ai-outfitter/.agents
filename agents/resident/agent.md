@@ -9,9 +9,10 @@ description: "The App-backed resident agent that implements, reviews, and revise
 # owner in FORGE_ORGANIZATION. Git requests a repository-scoped token once the
 # trusted task supplies the repository.
 # Verified in the deployed runtime: Outfitter 1.11.0 runs pi-coding-agent
-# 0.80.10; the image has sh, bash, git, and node, but no github-mcp-server, gh,
-# curl, or wget. This pi runtime does not spawn servers declared in mcp.json,
-# so the catalog helper provisions and spawns github-mcp-server from bash.
+# 0.80.10; the image has sh, bash, git, node, tar, uname, and the pinned
+# github-mcp-server v1.8.0, but no gh, curl, or wget. This pi runtime does not
+# spawn servers declared in mcp.json, so the catalog helper verifies and spawns
+# github-mcp-server from bash.
 tools: {allow: [read, grep, glob, edit, write, bash, mcp, a2a_read_task, a2a_complete_task]}
 model: openai/gpt-5.6-sol
 extensions:
@@ -113,7 +114,7 @@ For `intent: implement`:
    Commit the finished change with author
    `Resident Agent <resident@ai-outfitter.com>`, a conventional subject, and
    a final commit-message line `🤖 Authored by Resident Agent`.
-5. Re-verify all four private-copy digests, then use the private copied
+5. Re-verify all five private-copy digests, then use the private copied
    `forge-git-askpass.js` to push to the tokenless URL:
    `git push https://github.com/<repository>.git HEAD:refs/heads/agent/issue-<n>`.
    `origin` is never authenticated; every network git command must use a
@@ -148,7 +149,7 @@ For `intent: review`:
    the review batch. The review batch contains only the create, comment, and
    submit calls and runs as one bash-driven reviewer request list in one MCP
    process. First call `pull_request_review_write` with `method: create`,
-   `commit_id: headSha`, and no event. Add each exact line note with
+   `commitID: headSha`, and no event. Add each exact line note with
    `add_comment_to_pending_review`. Finally call `pull_request_review_write`
    with `method: submit_pending`: use event `APPROVE` only when findings are
    empty; otherwise use `REQUEST_CHANGES` and put all findings in the body.
@@ -165,12 +166,12 @@ For `intent: revise`:
 
 1. Initialize the repository path with the permanently tokenless `origin` as
    above. Using the private copied `forge-git-askpass.js` after re-verifying all
-   four private-copy digests, fetch the tokenless URL with
+   five private-copy digests, fetch the tokenless URL with
    `refs/heads/agent/issue-<n>` and check out `FETCH_HEAD` as
    `agent/issue-<n>`. Address every item in `findings` and add or update tests.
 2. Run the repository's checks through the credential-scrubbing wrapper,
    commit with the Resident identity and required
-   authorship line. Re-verify all four private-copy digests, then push with the
+   authorship line. Re-verify all five private-copy digests, then push with the
    one-shot tokenless URL and the private copied `forge-git-askpass.js` used
    above. `origin` remains tokenless.
 3. Call `a2a_complete_task` with status `completed` and exactly

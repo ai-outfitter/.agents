@@ -80,6 +80,19 @@ lines.on("line", (line) => {
   assert.notEqual(await new Promise((resolve) => wrongOwner.on("close", resolve)), 0);
   assert.match(wrongOwnerStderr, /FORGE_REPOSITORY owner must equal FORGE_ORGANIZATION/);
 
+  const missingOrganization = runDriver(["reviewer"], [
+    { id: 1, method: "tools/call", params: { name: "pull_request_read", arguments: {} } },
+  ], {
+    FORGE_REPOSITORY: "ai-outfitter/.agents",
+    FORGE_ORGANIZATION: "",
+    A2A_CREDENTIALS_PATH: credentials,
+    FORGE_TOKEN_URL: `http://127.0.0.1:${broker.address().port}`,
+  });
+  let missingOrganizationStderr = "";
+  missingOrganization.stderr.on("data", (chunk) => { missingOrganizationStderr += chunk; });
+  assert.notEqual(await new Promise((resolve) => missingOrganization.on("close", resolve)), 0);
+  assert.match(missingOrganizationStderr, /FORGE_ORGANIZATION is required/);
+
   const requests = [
     { id: 1, method: "tools/call", params: { name: "pull_request_read", arguments: { owner: "ai-outfitter" } } },
     { id: 2, method: "tools/call", params: { name: "pull_request_review_write", arguments: { method: "create" } } },
@@ -104,24 +117,17 @@ lines.on("line", (line) => {
   const status = await new Promise((resolve) => child.on("close", resolve));
   broker.close();
 
-  assert.equal(status, 0, stderr);
+  assert.notEqual(status, 0);
+  assert.match(stderr, /sha256 mismatch for github-mcp-server/);
   assert.deepEqual(brokerRequest, {
     authorization: "Bearer a2a-secret",
     body: { role: "reviewer", repository: "ai-outfitter/.agents" },
   });
-  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(temporary, "args.json"), "utf8")), [
-    "stdio",
-    "--tools",
-    "get_me,pull_request_read,get_file_contents,pull_request_review_write,add_comment_to_pending_review",
-  ]);
-  const results = stdout.trim().split("\n").map(JSON.parse);
-  assert.deepEqual(results.map(({ id }) => id), [1, 2]);
-  for (const result of results) {
-    assert.equal(JSON.parse(result.result.content[0].text).initialized, true);
-  }
+  assert.equal(fs.existsSync(path.join(temporary, "args.json")), false);
+  assert.equal(stdout, "");
   assert(!`${stdout}${stderr}`.includes("github-secret"));
   assert(!`${stdout}${stderr}`.includes("a2a-secret"));
-  process.stdout.write("forge-mcp-call integration test passed\n");
+  process.stdout.write("forge-mcp-call security tests passed\n");
 }
 
 main().catch((error) => {
