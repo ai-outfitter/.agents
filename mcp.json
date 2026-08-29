@@ -25,30 +25,6 @@
       ],
       "lifecycle": "keep-alive",
       "requestTimeoutMs": 30000
-    },
-    "forge-github-write": {
-      "command": "sh",
-      "args": [
-        "-c",
-        "set -eu; revision=$(node -e 'eval(Buffer.from(process.argv[1],\"base64\").toString())' 'Y29uc3QgZnMgPSByZXF1aXJlKCJub2RlOmZzIik7CmNvbnN0IHRleHQgPSBmcy5yZWFkRmlsZVN5bmMocHJvY2Vzcy5hcmd2WzFdLCAidXRmOCIpOwpjb25zdCBzY2FsYXIgPSBTdHJpbmcucmF3YCg/OiIoW14iXSopInwnKFteJ10qKSd8KFteI1xzXSspKWA7CmNvbnN0IGl0ZW1zID0gdGV4dC5zcGxpdCgvKD89XlxzKi1ccyspL20pOwpmb3IgKGNvbnN0IGl0ZW0gb2YgaXRlbXMpIHsKICBjb25zdCBnaXRodWIgPSBpdGVtLm1hdGNoKG5ldyBSZWdFeHAoU3RyaW5nLnJhd2AoPzpefFxuKVxzKig/Oi1ccyopP2dpdGh1YlxzKjpccypgICsgc2NhbGFyLCAibSIpKTsKICBpZiAoZ2l0aHViICYmIChnaXRodWJbMV0gfHwgZ2l0aHViWzJdIHx8IGdpdGh1YlszXSkgPT09ICJhaS1vdXRmaXR0ZXIvLmFnZW50cyIpIHsKICAgIGNvbnN0IHJlZiA9IGl0ZW0ubWF0Y2gobmV3IFJlZ0V4cChTdHJpbmcucmF3YCg/Ol58XG4pXHMqKD86LVxzKik/cmVmXHMqOlxzKmAgKyBzY2FsYXIsICJtIikpOwogICAgaWYgKHJlZikgewogICAgICBwcm9jZXNzLnN0ZG91dC53cml0ZShyZWZbMV0gfHwgcmVmWzJdIHx8IHJlZlszXSk7CiAgICAgIHByb2Nlc3MuZXhpdCgwKTsKICAgIH0KICB9Cn0KcHJvY2Vzcy5leGl0KDEpOwo=' /workspace/.agents/settings.yml) || { echo 'forge MCP: no pinned ai-outfitter/.agents revision in settings.yml' >&2; exit 1; }; cache_key=$(printf '%s#%s' 'git+https://github.com/ai-outfitter/.agents.git' \"$revision\" | base64 -w0 | tr '+/' '-_' | tr -d '='); catalog=/workspace/.agents-cache/repos/$cache_key; launcher=$catalog/scripts/forge-mcp-launch.js; test -f \"$launcher\" || { echo 'forge MCP: launcher missing from resolved catalog checkout' >&2; exit 1; }; exec node \"$launcher\" \"$@\"",
-        "forge-github-write",
-        "implementer",
-        "get_me,issue_read,search_issues,get_file_contents,add_issue_comment,list_pull_requests,create_pull_request,pull_request_read,add_reply_to_pull_request_comment"
-      ],
-      "lifecycle": "keep-alive",
-      "requestTimeoutMs": 30000
-    },
-    "forge-github-review": {
-      "command": "sh",
-      "args": [
-        "-c",
-        "set -eu; revision=$(node -e 'eval(Buffer.from(process.argv[1],\"base64\").toString())' 'Y29uc3QgZnMgPSByZXF1aXJlKCJub2RlOmZzIik7CmNvbnN0IHRleHQgPSBmcy5yZWFkRmlsZVN5bmMocHJvY2Vzcy5hcmd2WzFdLCAidXRmOCIpOwpjb25zdCBzY2FsYXIgPSBTdHJpbmcucmF3YCg/OiIoW14iXSopInwnKFteJ10qKSd8KFteI1xzXSspKWA7CmNvbnN0IGl0ZW1zID0gdGV4dC5zcGxpdCgvKD89XlxzKi1ccyspL20pOwpmb3IgKGNvbnN0IGl0ZW0gb2YgaXRlbXMpIHsKICBjb25zdCBnaXRodWIgPSBpdGVtLm1hdGNoKG5ldyBSZWdFeHAoU3RyaW5nLnJhd2AoPzpefFxuKVxzKig/Oi1ccyopP2dpdGh1YlxzKjpccypgICsgc2NhbGFyLCAibSIpKTsKICBpZiAoZ2l0aHViICYmIChnaXRodWJbMV0gfHwgZ2l0aHViWzJdIHx8IGdpdGh1YlszXSkgPT09ICJhaS1vdXRmaXR0ZXIvLmFnZW50cyIpIHsKICAgIGNvbnN0IHJlZiA9IGl0ZW0ubWF0Y2gobmV3IFJlZ0V4cChTdHJpbmcucmF3YCg/Ol58XG4pXHMqKD86LVxzKik/cmVmXHMqOlxzKmAgKyBzY2FsYXIsICJtIikpOwogICAgaWYgKHJlZikgewogICAgICBwcm9jZXNzLnN0ZG91dC53cml0ZShyZWZbMV0gfHwgcmVmWzJdIHx8IHJlZlszXSk7CiAgICAgIHByb2Nlc3MuZXhpdCgwKTsKICAgIH0KICB9Cn0KcHJvY2Vzcy5leGl0KDEpOwo=' /workspace/.agents/settings.yml) || { echo 'forge MCP: no pinned ai-outfitter/.agents revision in settings.yml' >&2; exit 1; }; cache_key=$(printf '%s#%s' 'git+https://github.com/ai-outfitter/.agents.git' \"$revision\" | base64 -w0 | tr '+/' '-_' | tr -d '='); catalog=/workspace/.agents-cache/repos/$cache_key; launcher=$catalog/scripts/forge-mcp-launch.js; test -f \"$launcher\" || { echo 'forge MCP: launcher missing from resolved catalog checkout' >&2; exit 1; }; exec node \"$launcher\" \"$@\"",
-        "forge-github-review",
-        "reviewer",
-        "get_me,issue_read,get_file_contents,pull_request_read,pull_request_review_write,add_comment_to_pending_review"
-      ],
-      "lifecycle": "keep-alive",
-      "requestTimeoutMs": 30000
     }
   }
 }

@@ -1,6 +1,7 @@
 # Reference declaration for the resident that the organization provisioner
 # creates with an organization-specific __ORG__, inference Secret, A2A bearer,
-# and FORGE_TOKEN_URL. Unlike the three notification-driven fleet agents, the
+# FORGE_TOKEN_URL, FORGE_CATALOG_DIR, and FORGE_ORGANIZATION. Unlike the three
+# notification-driven fleet agents, the
 # resident is not listed in clusters.yaml and deploy-catalog does not own it.
 apiVersion: aioutfitter.com/v1alpha1
 kind: Agent
@@ -15,7 +16,8 @@ spec:
   credentials:
     # The provisioner creates this Secret in the Agent namespace. The
     # operator separately mounts its generated A2A credential document and
-    # sets A2A_CREDENTIALS_PATH and FORGE_TOKEN_URL on the runtime container.
+    # sets A2A_CREDENTIALS_PATH, FORGE_TOKEN_URL, FORGE_CATALOG_DIR, and
+    # FORGE_ORGANIZATION on the runtime container.
     - secret: inference
       as: env
   workspace:

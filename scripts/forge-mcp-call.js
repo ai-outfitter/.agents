@@ -6,6 +6,10 @@ const { spawn } = require("node:child_process");
 const { requestForgeToken } = require("./forge-token");
 
 const [role, inputPath] = process.argv.slice(2);
+const ROLE_TOOLS = Object.freeze({
+  implementer: ["get_me", "issue_read", "get_file_contents", "create_pull_request", "add_issue_comment"],
+  reviewer: ["get_me", "pull_request_read", "get_file_contents", "pull_request_review_write", "add_comment_to_pending_review", "submit_pending_pull_request_review"],
+});
 
 function readInput() {
   const text = inputPath ? fs.readFileSync(inputPath, "utf8") : fs.readFileSync(0, "utf8");
@@ -36,11 +40,18 @@ function send(child, message) {
 }
 
 async function main() {
-  if (!role) throw new Error("usage: forge-mcp-call.js <implementer|reviewer> [request-file]");
+  const allowedTools = ROLE_TOOLS[role];
+  if (!allowedTools) throw new Error("usage: forge-mcp-call.js <implementer|reviewer> [request-file]");
+  const repository = process.env.FORGE_REPOSITORY;
+  if (!repository) throw new Error("missing forge token environment");
   const requests = readInput();
-  const tools = [...new Set(requests.map(({ params }) => params.name))].join(",");
-  const token = await requestForgeToken({ role, repository: process.env.FORGE_REPOSITORY });
-  const child = spawn("github-mcp-server", ["stdio", "--tools", tools], {
+  for (const request of requests) {
+    if (!allowedTools.includes(request.params.name)) {
+      throw new Error(`MCP tool ${request.params.name} is not allowed for role ${role}`);
+    }
+  }
+  const token = await requestForgeToken({ role, repository });
+  const child = spawn("github-mcp-server", ["stdio", "--tools", allowedTools.join(",")], {
     stdio: ["pipe", "pipe", "inherit"],
     env: { ...process.env, GITHUB_PERSONAL_ACCESS_TOKEN: token },
   });
