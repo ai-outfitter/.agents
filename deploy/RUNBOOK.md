@@ -214,15 +214,17 @@ rule in Outfitter's `code/cli/src/sources/SourceCache.ts`
 (`catalogBootstrapStep` / `catalogCacheKey`); Outfitter does not rewrite MCP
 arguments or provide a catalog-root cwd. At startup each MCP launcher
 atomically installs the askpass helper at `$HOME/.forge/forge-git-askpass.js`
-and writes the informational catalog handoff to `$HOME/.forge/catalog-path`;
-both use owner-only modes and never `/tmp`. The profile executes only the fixed
-askpass path and does not derive it from the handoff. Keep the helper scripts
+and the checks wrapper at `$HOME/.forge/run-repository-checks.js`, then writes
+the informational catalog handoff to `$HOME/.forge/catalog-path`; all use
+owner-only modes and never `/tmp`. The profile executes only the fixed helper
+paths and does not derive them from the handoff. Keep the helper scripts
 in the catalog checkout and preserve executable mode (`100755`) for scripts
 invoked directly, especially `forge-git-askpass.js` and
 `run-repository-checks.js`.
 
-Repository-provided checks run through `scripts/run-repository-checks.js`,
-which constructs a minimal environment containing only `PATH` and `HOME`.
+Repository-provided checks run through `$HOME/.forge/run-repository-checks.js`,
+which constructs a minimal environment containing only `PATH` and an empty
+temporary `HOME` that is deleted after the command exits.
 This removes `A2A_CREDENTIALS_PATH`, `FORGE_TOKEN_URL`, `GIT_ASKPASS`, and all
 `GITHUB_*` variables from test and build processes. This is only a partial
 mitigation: the credential mount path remains fixed and guessable, and

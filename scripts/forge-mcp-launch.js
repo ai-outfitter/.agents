@@ -17,6 +17,7 @@ function installWorkspaceHelpers() {
   const writes = [
     [path.join(__dirname, "forge-token.js"), path.join(directory, "forge-token.js"), 0o600],
     [path.join(__dirname, "forge-git-askpass.js"), path.join(directory, "forge-git-askpass.js"), 0o700],
+    [path.join(__dirname, "run-repository-checks.js"), path.join(directory, "run-repository-checks.js"), 0o700],
     [Buffer.from(`${catalog}\n`), path.join(directory, "catalog-path"), 0o600],
   ];
   for (const [source, destination, mode] of writes) {

@@ -52,15 +52,21 @@ Work one forge task at a time over the A2A task plane. Do not merge.
 - Keep `origin` tokenless. For each network command, set `GIT_ASKPASS` to the
   fixed executable `$HOME/.forge/forge-git-askpass.js`; reject the task if it
   is absent or is not executable. In the same one-shot environment set
-  `FORGE_REPOSITORY=<owner>/<repo>`, `FORGE_TOKEN_ROLE=implementer`, and
-  `GIT_TERMINAL_PROMPT=0`, then unset `GIT_ASKPASS`, `FORGE_REPOSITORY`, and
-  `FORGE_TOKEN_ROLE`. The helper requests a repository-scoped token for that
-  role (defaulting to implementer) and
+  `FORGE_REPOSITORY=<owner>/<repo>`, `FORGE_TOKEN_ROLE` to the role for this
+  intent (`implementer` for implement and revise, `reviewer` for review), and
+  `GIT_TERMINAL_PROMPT=0`. The helper requests a repository-scoped token for
+  that role and
   emits it only to git's password prompt. Never fetch, capture, print, store,
   or pass a token in model-authored shell, argv, environment, or git config.
-- Run all repository-provided checks through the catalog's executable
-  `scripts/run-repository-checks.js` wrapper. It starts each command with a
-  minimal environment containing only `PATH` and `HOME`, so
+- Before running repository-controlled code, record the askpass helper's
+  digest. Re-verify that digest immediately before every later network git
+  command, and reject the task if it changed.
+- Run all repository-provided checks only through the fixed executable
+  `$HOME/.forge/run-repository-checks.js` wrapper; this is the only sanctioned
+  way to run them. Reject the task if it is absent or is not executable. It
+  starts each command with a minimal environment and an empty temporary
+  `HOME`, so the credential and askpass paths are inaccessible through the
+  check's environment, and
   `A2A_CREDENTIALS_PATH`, `FORGE_TOKEN_URL`, `GIT_ASKPASS`, and every
   `GITHUB_*` variable are absent. Do not run test, build, install, lint, or
   other repository-controlled code outside this wrapper.
