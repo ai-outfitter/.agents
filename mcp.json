@@ -17,21 +17,29 @@
       "requestTimeoutMs": 30000
     },
     "github-write": {
-      "command": "node",
+      "command": "github-mcp-server",
       "args": [
-        "-e",
-        "const fs=require('node:fs'),{spawnSync}=require('node:child_process');(async()=>{const role=process.argv[1],tools=process.argv[2],p=process.env.A2A_CREDENTIALS_PATH,u=process.env.FORGE_TOKEN_URL,r=process.env.FORGE_REPOSITORY;if(!p||!u||!r)throw Error('missing forge token environment');const c=JSON.parse(fs.readFileSync(p,'utf8')).credentials?.[0]?.token;if(!c)throw Error('missing A2A credential');const x=await fetch(u,{method:'POST',headers:{authorization:'Bearer '+c,'content-type':'application/json'},body:JSON.stringify({role,repository:r})});if(!x.ok)throw Error('forge token request failed: '+x.status);const t=(await x.json()).token;if(!t)throw Error('forge token response missing token');const q=spawnSync('github-mcp-server',['stdio','--tools',tools],{stdio:'inherit',env:{...process.env,GITHUB_PERSONAL_ACCESS_TOKEN:t}});process.exit(q.status??1)})().catch(e=>{console.error(e.message);process.exit(1)})",
-        "implementer",
+        "stdio",
+        "--tools",
         "get_me,issue_read,search_issues,get_file_contents,add_issue_comment,list_pull_requests,create_pull_request,pull_request_read,pull_request_review_write,add_comment_to_pending_review,add_reply_to_pull_request_comment"
       ],
       "lifecycle": "keep-alive",
       "requestTimeoutMs": 30000
     },
-    "github-review": {
+    "forge-github-write": {
       "command": "node",
       "args": [
-        "-e",
-        "const fs=require('node:fs'),{spawnSync}=require('node:child_process');(async()=>{const role=process.argv[1],tools=process.argv[2],p=process.env.A2A_CREDENTIALS_PATH,u=process.env.FORGE_TOKEN_URL,r=process.env.FORGE_REPOSITORY;if(!p||!u||!r)throw Error('missing forge token environment');const c=JSON.parse(fs.readFileSync(p,'utf8')).credentials?.[0]?.token;if(!c)throw Error('missing A2A credential');const x=await fetch(u,{method:'POST',headers:{authorization:'Bearer '+c,'content-type':'application/json'},body:JSON.stringify({role,repository:r})});if(!x.ok)throw Error('forge token request failed: '+x.status);const t=(await x.json()).token;if(!t)throw Error('forge token response missing token');const q=spawnSync('github-mcp-server',['stdio','--tools',tools],{stdio:'inherit',env:{...process.env,GITHUB_PERSONAL_ACCESS_TOKEN:t}});process.exit(q.status??1)})().catch(e=>{console.error(e.message);process.exit(1)})",
+        "scripts/forge-mcp-launch.js",
+        "implementer",
+        "get_me,issue_read,search_issues,get_file_contents,add_issue_comment,list_pull_requests,create_pull_request,pull_request_read,add_reply_to_pull_request_comment"
+      ],
+      "lifecycle": "keep-alive",
+      "requestTimeoutMs": 30000
+    },
+    "forge-github-review": {
+      "command": "node",
+      "args": [
+        "scripts/forge-mcp-launch.js",
         "reviewer",
         "get_me,issue_read,get_file_contents,pull_request_read,pull_request_review_write,add_comment_to_pending_review"
       ],

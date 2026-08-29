@@ -140,6 +140,43 @@ other deployment of these personas — see the community-profiles catalog's
 own Luce documentation for the exact ruleset; the boundary is enforced by the
 forge, not by the token or the profile.
 
+## App-backed resident credentials
+
+The App-backed `resident` is provisioned per organization; it is not part of
+the notification-driven `clusters.yaml` fleet above.
+`agents/resident/deployment.yaml` records its reference declaration, while
+the provisioner creates the organization-specific object and the operator
+supplies these runtime values:
+
+| Variable | Contract |
+| --- | --- |
+| `A2A_CREDENTIALS_PATH` | Path to JSON `{"credentials":[{"token":"<bearer>","principal":"forge-app"}]}` |
+| `FORGE_TOKEN_URL` | Plain in-cluster HTTP endpoint, normally `http://<forge-app-service>.<org-namespace>.svc/internal/tokens` |
+
+The bearer at `A2A_CREDENTIALS_PATH` authenticates the resident to that
+organization's forge-app broker. The resident selects the credential whose
+`principal` is `forge-app`; array order has no meaning. The file is mounted
+read-only and must not be copied into the workspace.
+
+The broker accepts `POST $FORGE_TOKEN_URL` with `Authorization: Bearer
+<forge-app token>`, `Content-Type: application/json`, and exactly one of these
+bodies:
+
+```json
+{"role":"implementer"}
+```
+
+```json
+{"role":"reviewer"}
+```
+
+It returns `200` and `{"token":"<one-hour GitHub installation token>"}`.
+The implementer role uses the organization's primary App; reviewer uses its
+separate reviewer App. Tokens are installation-scoped to the organization,
+not bound to a repository, so there is deliberately no `FORGE_REPOSITORY`
+variable. The trusted A2A task names the repository, and the profile rejects
+attempts by repository content to redirect work elsewhere.
+
 ## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
 
 For each agent (`outfitter-luce`, `outfitter-vega`,
