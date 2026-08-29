@@ -8,7 +8,7 @@ const { requestForgeToken } = require("./forge-token");
 const [role, inputPath] = process.argv.slice(2);
 const ROLE_TOOLS = Object.freeze({
   implementer: ["get_me", "issue_read", "get_file_contents", "create_pull_request", "add_issue_comment"],
-  reviewer: ["get_me", "pull_request_read", "get_file_contents", "pull_request_review_write", "add_comment_to_pending_review", "submit_pending_pull_request_review"],
+  reviewer: ["get_me", "pull_request_read", "get_file_contents", "pull_request_review_write", "add_comment_to_pending_review"],
 });
 
 function readInput() {

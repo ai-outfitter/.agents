@@ -6,6 +6,10 @@ function validateRepository(repository) {
   if (repository !== undefined && !/^[^/\s]+\/[^/\s]+$/.test(repository)) {
     throw new Error("invalid FORGE_REPOSITORY");
   }
+  const organization = process.env.FORGE_ORGANIZATION;
+  if (repository !== undefined && organization && repository.split("/", 1)[0] !== organization) {
+    throw new Error("FORGE_REPOSITORY owner must equal FORGE_ORGANIZATION");
+  }
 }
 
 async function requestForgeToken({ role, repository }) {

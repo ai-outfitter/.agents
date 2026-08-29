@@ -67,6 +67,19 @@ lines.on("line", (line) => {
   assert.notEqual(await new Promise((resolve) => forbidden.on("close", resolve)), 0);
   assert.match(forbiddenStderr, /not allowed for role reviewer/);
 
+  const wrongOwner = runDriver(["reviewer"], [
+    { id: 1, method: "tools/call", params: { name: "pull_request_read", arguments: {} } },
+  ], {
+    FORGE_REPOSITORY: "other-owner/repository",
+    FORGE_ORGANIZATION: "ai-outfitter",
+    A2A_CREDENTIALS_PATH: credentials,
+    FORGE_TOKEN_URL: `http://127.0.0.1:${broker.address().port}`,
+  });
+  let wrongOwnerStderr = "";
+  wrongOwner.stderr.on("data", (chunk) => { wrongOwnerStderr += chunk; });
+  assert.notEqual(await new Promise((resolve) => wrongOwner.on("close", resolve)), 0);
+  assert.match(wrongOwnerStderr, /FORGE_REPOSITORY owner must equal FORGE_ORGANIZATION/);
+
   const requests = [
     { id: 1, method: "tools/call", params: { name: "pull_request_read", arguments: { owner: "ai-outfitter" } } },
     { id: 2, method: "tools/call", params: { name: "pull_request_review_write", arguments: { method: "create" } } },
@@ -78,6 +91,7 @@ lines.on("line", (line) => {
       A2A_CREDENTIALS_PATH: credentials,
       FORGE_TOKEN_URL: `http://127.0.0.1:${broker.address().port}`,
       FORGE_REPOSITORY: "ai-outfitter/.agents",
+      FORGE_ORGANIZATION: "ai-outfitter",
       ARGS_PATH: path.join(temporary, "args.json"),
     },
     stdio: ["pipe", "pipe", "pipe"],
@@ -98,7 +112,7 @@ lines.on("line", (line) => {
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(temporary, "args.json"), "utf8")), [
     "stdio",
     "--tools",
-    "get_me,pull_request_read,get_file_contents,pull_request_review_write,add_comment_to_pending_review,submit_pending_pull_request_review",
+    "get_me,pull_request_read,get_file_contents,pull_request_review_write,add_comment_to_pending_review",
   ]);
   const results = stdout.trim().split("\n").map(JSON.parse);
   assert.deepEqual(results.map(({ id }) => id), [1, 2]);
