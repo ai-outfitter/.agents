@@ -167,8 +167,8 @@ identity, with an adversarial verdict derived again from the issue and full
 diff. A dedicated reviewer resident is a later milestone.
 
 The broker accepts `POST $FORGE_TOKEN_URL` with `Authorization: Bearer
-<forge-app token>`, `Content-Type: application/json`, and exactly one of these
-bodies:
+<forge-app token>` and `Content-Type: application/json`. Both roles accept an
+installation-scoped body:
 
 ```json
 {"role":"implementer"}
@@ -180,22 +180,46 @@ bodies:
 
 It returns `200` and `{"token":"<one-hour GitHub installation token>"}`.
 The implementer role uses the organization's primary App; reviewer uses its
-separate reviewer App. Tokens are installation-scoped to the organization,
-not bound to a repository, so there is deliberately no `FORGE_REPOSITORY`
-variable. The trusted A2A task names the repository, and the profile rejects
-attempts by repository content to redirect work elsewhere.
+separate reviewer App. Either body may also include `repository`:
+
+```json
+{"role":"implementer","repository":"owner/repo"}
+```
+
+The broker validates the repository owner and restricts the resulting token
+to that repository. Without `repository`, the token has its role's permissions
+across the whole organization installation; for implementer this is an
+installation-wide write credential. The MCP servers accept that blast radius
+because they start once per session before any task repository is known. The
+git askpass helper runs only once the trusted A2A task has named a repository,
+so every fetch and push MUST set `FORGE_REPOSITORY=owner/repo` inline and the
+helper MUST request the repository-scoped form.
 
 `scripts/forge-mcp-launch.js` obtains the role-selected token and starts
-`github-mcp-server`; `scripts/forge-git-askpass.js` supplies an implementer
-token only to git's credential prompt. Both remain inside the catalog checkout
-at runtime. The MCP definitions resolve that checkout from the pinned first
-source in `/workspace/.agents/settings.yml`, then compute
+`github-mcp-server`; `scripts/forge-git-askpass.js` supplies a repository-scoped
+implementer token only to git's credential prompt. Both remain inside the
+catalog checkout at runtime. The MCP definitions resolve that checkout from
+the pinned first source in `/workspace/.agents/settings.yml`, then compute
 `/workspace/.agents-cache/repos/<base64url(uri#revision)>`. This is the exact
 rule in Outfitter's `code/cli/src/sources/SourceCache.ts`
 (`encodeRemoteSource` / `createRemoteRepositoryCachePath`) and the operator's
 `code/operator/internal/provisioner/server.go`
 (`catalogBootstrapStep` / `catalogCacheKey`); Outfitter does not rewrite MCP
-arguments or provide a catalog-root cwd. Keep both scripts in that checkout.
+arguments or provide a catalog-root cwd. At startup the MCP definitions write
+the resolved catalog directory to `/tmp/forge-catalog-path`; the profile reads
+that file rather than deriving the cache key itself. Keep the helper scripts in
+that checkout and preserve executable mode (`100755`) for scripts invoked
+directly, especially `forge-git-askpass.js` and `run-repository-checks.js`.
+
+Repository-provided checks run through `scripts/run-repository-checks.js`,
+which constructs a minimal environment containing only `PATH` and `HOME`.
+This removes `A2A_CREDENTIALS_PATH`, `FORGE_TOKEN_URL`, `GIT_ASKPASS`, and all
+`GITHUB_*` variables from test and build processes. This is only a partial
+mitigation: the credential mount path remains fixed and guessable, and
+same-UID processes can inspect MCP token environments through `/proc`. Durable
+containment requires checks in a separate pod with an enforcing network policy,
+or mounting credentials only into helper processes rather than the agent
+container.
 
 ## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
 

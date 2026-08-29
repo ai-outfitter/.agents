@@ -13,8 +13,12 @@ async function main() {
 
   const credentialsPath = process.env.A2A_CREDENTIALS_PATH;
   const tokenUrl = process.env.FORGE_TOKEN_URL;
-  if (!credentialsPath || !tokenUrl) throw new Error("missing forge token environment");
+  const repository = process.env.FORGE_REPOSITORY;
+  if (!credentialsPath || !tokenUrl || !repository) {
+    throw new Error("missing forge token environment");
+  }
   if (!/^https?:\/\//.test(tokenUrl)) throw new Error("FORGE_TOKEN_URL must use http or https");
+  if (!/^[^/\s]+\/[^/\s]+$/.test(repository)) throw new Error("invalid FORGE_REPOSITORY");
 
   let document;
   try {
@@ -31,7 +35,7 @@ async function main() {
       authorization: `Bearer ${credential.token}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify({ role: "implementer" }),
+    body: JSON.stringify({ role: "implementer", repository }),
   });
   if (!response.ok) throw new Error(`forge token request failed: ${response.status}`);
 
