@@ -164,7 +164,10 @@ not credential isolation: branch protection and any required human approval
 remain the enforcing controls. A review of this resident's implementer PR is
 valid only in a fresh conversation and fresh checkout, through the reviewer
 identity, with an adversarial verdict derived again from the issue and full
-diff. A dedicated reviewer resident is a later milestone.
+diff. MCP identities are installation-scoped by construction because their
+servers start before the task repository is known. Per-task MCP restart (or a
+repository-scoped broker token after the task is known) and a dedicated
+reviewer resident are later milestones.
 
 The broker accepts `POST $FORGE_TOKEN_URL` with `Authorization: Bearer
 <forge-app token>` and `Content-Type: application/json`. Both roles accept an
@@ -197,29 +200,36 @@ helper MUST request the repository-scoped form.
 
 `scripts/forge-mcp-launch.js` obtains the role-selected token and starts
 `github-mcp-server`; `scripts/forge-git-askpass.js` supplies a repository-scoped
-implementer token only to git's credential prompt. Both remain inside the
-catalog checkout at runtime. The MCP definitions resolve that checkout from
-the pinned first source in `/workspace/.agents/settings.yml`, then compute
+implementer or reviewer token only to git's credential prompt. The MCP
+definitions resolve the catalog checkout from the `ai-outfitter/.agents`
+source in `/workspace/.agents/settings.yml`, regardless of YAML key order or
+quoting, then compute
 `/workspace/.agents-cache/repos/<base64url(uri#revision)>`. This is the exact
 rule in Outfitter's `code/cli/src/sources/SourceCache.ts`
 (`encodeRemoteSource` / `createRemoteRepositoryCachePath`) and the operator's
 `code/operator/internal/provisioner/server.go`
 (`catalogBootstrapStep` / `catalogCacheKey`); Outfitter does not rewrite MCP
-arguments or provide a catalog-root cwd. At startup the MCP definitions write
-the resolved catalog directory to `/tmp/forge-catalog-path`; the profile reads
-that file rather than deriving the cache key itself. Keep the helper scripts in
-that checkout and preserve executable mode (`100755`) for scripts invoked
-directly, especially `forge-git-askpass.js` and `run-repository-checks.js`.
+arguments or provide a catalog-root cwd. At startup each MCP launcher
+atomically installs the askpass helper at `$HOME/.forge/forge-git-askpass.js`
+and writes the informational catalog handoff to `$HOME/.forge/catalog-path`;
+both use owner-only modes and never `/tmp`. The profile executes only the fixed
+askpass path and does not derive it from the handoff. Keep the helper scripts
+in the catalog checkout and preserve executable mode (`100755`) for scripts
+invoked directly, especially `forge-git-askpass.js` and
+`run-repository-checks.js`.
 
 Repository-provided checks run through `scripts/run-repository-checks.js`,
 which constructs a minimal environment containing only `PATH` and `HOME`.
 This removes `A2A_CREDENTIALS_PATH`, `FORGE_TOKEN_URL`, `GIT_ASKPASS`, and all
 `GITHUB_*` variables from test and build processes. This is only a partial
 mitigation: the credential mount path remains fixed and guessable, and
-same-UID processes can inspect MCP token environments through `/proc`. Durable
-containment requires checks in a separate pod with an enforcing network policy,
-or mounting credentials only into helper processes rather than the agent
-container.
+same-UID processes can inspect MCP token environments through `/proc`. They can
+also modify workspace paths reachable by checks, including
+`$HOME/.forge/catalog-path`, the copied askpass helper, the catalog checkout,
+and `/workspace/.agents/settings.yml`; treat all of those as untrusted after
+repository code runs. Durable containment requires checks in a separate pod
+with an enforcing network policy, or mounting credentials only into helper
+processes rather than the agent container.
 
 ## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
 
