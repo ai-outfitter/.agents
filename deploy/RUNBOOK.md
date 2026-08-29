@@ -140,6 +140,93 @@ other deployment of these personas — see the community-profiles catalog's
 own Luce documentation for the exact ruleset; the boundary is enforced by the
 forge, not by the token or the profile.
 
+## App-backed resident credentials
+
+The App-backed `resident` is provisioned per organization; it is not part of
+the notification-driven `clusters.yaml` fleet above.
+`agents/resident/deployment.yaml` records its reference declaration, while
+the provisioner creates the organization-specific object and the operator
+supplies these runtime values:
+
+| Variable | Contract |
+| --- | --- |
+| `A2A_CREDENTIALS_PATH` | Path to JSON `{"credentials":[{"token":"<bearer>","principal":"forge-app"}]}` |
+| `FORGE_TOKEN_URL` | Plain in-cluster HTTP endpoint, normally `http://<forge-app-service>.<org-namespace>.svc/internal/tokens` |
+| `FORGE_CATALOG_DIR` | Absolute path of the materialized `ai-outfitter/.agents` catalog checkout |
+| `FORGE_ORGANIZATION` | GitHub organization login that owns repositories accepted by this resident |
+
+The bearer at `A2A_CREDENTIALS_PATH` authenticates the resident to that
+organization's forge-app broker. The resident selects the credential whose
+`principal` is `forge-app`; array order has no meaning. The file is mounted
+read-only and must not be copied into the workspace.
+
+M1 runs one resident per organization with both identities available to that
+process. The identity split is therefore an advisory, prompt-level boundary,
+not credential isolation: branch protection and any required human approval
+remain the enforcing controls. A review of this resident's implementer PR is
+valid only in a fresh conversation and fresh checkout, through the reviewer
+identity, with an adversarial verdict derived again from the issue and full
+diff. Both MCP and git credentials are requested per task and scoped to the
+repository named by the trusted task. A dedicated reviewer resident is a later
+milestone.
+
+The broker accepts `POST $FORGE_TOKEN_URL` with `Authorization: Bearer
+<forge-app token>` and `Content-Type: application/json`. Resident helpers send
+a repository-scoped body:
+
+```json
+{"role":"implementer","repository":"owner/repo"}
+```
+
+It returns `200` and `{"token":"<one-hour GitHub installation token>"}`.
+The implementer role uses the organization's primary App; reviewer uses its
+separate reviewer App.
+
+The broker validates the repository owner and restricts the resulting token
+to that repository. Both resident helpers fail closed unless
+`FORGE_REPOSITORY` and a valid role are supplied, so the resident never asks
+for an installation-wide token.
+
+The operator exports `FORGE_CATALOG_DIR` as the absolute path of the
+materialized catalog checkout and `FORGE_ORGANIZATION` as the allowed GitHub
+owner in the resident container. `scripts/forge-git-askpass.js` supplies a
+repository-scoped implementer or reviewer token only to git's credential
+prompt. `scripts/forge-mcp-call.js` performs the MCP handshake and a JSON
+request list in one bash-spawned `github-mcp-server`; it selects a fixed,
+role-specific tool allowlist rather than accepting one from the caller. Every
+invocation MUST set `FORGE_REPOSITORY=owner/repo`; git invocations MUST also set
+`FORGE_TOKEN_ROLE` explicitly.
+
+The runtime image ships the pinned `github-mcp-server` v1.8.0 binary. Before
+spawning it, `scripts/ensure-github-mcp-server.js` verifies every PATH match
+against architecture-specific binary digests derived from the pinned runtime
+images. As a compatibility fallback, the helper downloads the v1.8.0 Linux
+release with a 30-second deadline, verifies the published archive checksum and
+the extracted binary checksum, and installs it in `$HOME/.local/bin`.
+
+Before repository-controlled checks run, the profile copies the askpass, MCP
+call, and checks helpers plus the MCP driver's `forge-token.js` and
+`ensure-github-mcp-server.js` dependencies to a private `mktemp` directory,
+sets them to mode `0500`, records their digests, and uses only those copies
+afterwards. Preserve executable mode (`100755`) for `forge-git-askpass.js`,
+`ensure-github-mcp-server.js`, and `run-repository-checks.js` in the catalog
+checkout.
+
+Repository-provided checks run through the private copied
+`run-repository-checks.js`, which constructs a minimal environment containing
+only `PATH` and an empty temporary `HOME` that is deleted after the command
+exits.
+This removes `A2A_CREDENTIALS_PATH`, `FORGE_TOKEN_URL`, `GIT_ASKPASS`, and all
+`GITHUB_*` variables from test and build processes. This is only a partial
+mitigation: the credential mount path remains fixed and guessable, and
+same-UID processes can inspect MCP token environments through `/proc`. They can
+also modify workspace paths reachable by checks, including the catalog
+checkout and `/workspace/.agents/settings.yml`; the private helper copies are
+digest-checked before every later credential-bearing invocation. Durable
+containment requires checks in a separate pod
+with an enforcing network policy, or mounting credentials only into helper
+processes rather than the agent container.
+
 ## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
 
 For each agent (`outfitter-luce`, `outfitter-vega`,
