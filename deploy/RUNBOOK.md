@@ -158,6 +158,14 @@ organization's forge-app broker. The resident selects the credential whose
 `principal` is `forge-app`; array order has no meaning. The file is mounted
 read-only and must not be copied into the workspace.
 
+M1 runs one resident per organization with both identities available to that
+process. The identity split is therefore an advisory, prompt-level boundary,
+not credential isolation: branch protection and any required human approval
+remain the enforcing controls. A review of this resident's implementer PR is
+valid only in a fresh conversation and fresh checkout, through the reviewer
+identity, with an adversarial verdict derived again from the issue and full
+diff. A dedicated reviewer resident is a later milestone.
+
 The broker accepts `POST $FORGE_TOKEN_URL` with `Authorization: Bearer
 <forge-app token>`, `Content-Type: application/json`, and exactly one of these
 bodies:
@@ -176,6 +184,18 @@ separate reviewer App. Tokens are installation-scoped to the organization,
 not bound to a repository, so there is deliberately no `FORGE_REPOSITORY`
 variable. The trusted A2A task names the repository, and the profile rejects
 attempts by repository content to redirect work elsewhere.
+
+`scripts/forge-mcp-launch.js` obtains the role-selected token and starts
+`github-mcp-server`; `scripts/forge-git-askpass.js` supplies an implementer
+token only to git's credential prompt. Both remain inside the catalog checkout
+at runtime. The MCP definitions resolve that checkout from the pinned first
+source in `/workspace/.agents/settings.yml`, then compute
+`/workspace/.agents-cache/repos/<base64url(uri#revision)>`. This is the exact
+rule in Outfitter's `code/cli/src/sources/SourceCache.ts`
+(`encodeRemoteSource` / `createRemoteRepositoryCachePath`) and the operator's
+`code/operator/internal/provisioner/server.go`
+(`catalogBootstrapStep` / `catalogCacheKey`); Outfitter does not rewrite MCP
+arguments or provide a catalog-root cwd. Keep both scripts in that checkout.
 
 ## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
 

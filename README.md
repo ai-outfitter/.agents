@@ -11,6 +11,10 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   agent: works issues assigned to it into reviewed pull requests.
 - [`agents/resident`](agents/resident/agent.md) — the App-backed resident agent:
   works forge tasks over the A2A task plane.
+- [`scripts/forge-mcp-launch.js`](scripts/forge-mcp-launch.js) and
+  [`scripts/forge-git-askpass.js`](scripts/forge-git-askpass.js) — fetch
+  role-selected App tokens for the resident's MCP servers and tokenless git
+  operations from the materialized catalog checkout.
 - [`agents/luce`](agents/luce/agent.md) — the org's resident agent: triages a
   report into a scoped issue with acceptance criteria, then works the issues
   assigned to it into pull requests. Luce is a persona shared across

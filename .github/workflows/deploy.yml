@@ -20,6 +20,7 @@ on:
       - agents/**
       - clusters.yaml
       - mcp.json
+      - scripts/**
       - models.json
       - settings.yml
       - deploy/**

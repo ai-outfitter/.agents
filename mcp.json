@@ -27,9 +27,11 @@
       "requestTimeoutMs": 30000
     },
     "forge-github-write": {
-      "command": "node",
+      "command": "sh",
       "args": [
-        "scripts/forge-mcp-launch.js",
+        "-c",
+        "set -eu; revision=$(sed -n '/github: ai-outfitter\\/.agents/{n;s/^[[:space:]]*ref:[[:space:]]*//p;q;}' /workspace/.agents/settings.yml); test -n \"$revision\"; cache_key=$(printf '%s#%s' 'git+https://github.com/ai-outfitter/.agents.git' \"$revision\" | base64 -w0 | tr '+/' '-_' | tr -d '='); launcher=/workspace/.agents-cache/repos/$cache_key/scripts/forge-mcp-launch.js; test -f \"$launcher\"; exec node \"$launcher\" \"$@\"",
+        "forge-github-write",
         "implementer",
         "get_me,issue_read,search_issues,get_file_contents,add_issue_comment,list_pull_requests,create_pull_request,pull_request_read,add_reply_to_pull_request_comment"
       ],
@@ -37,9 +39,11 @@
       "requestTimeoutMs": 30000
     },
     "forge-github-review": {
-      "command": "node",
+      "command": "sh",
       "args": [
-        "scripts/forge-mcp-launch.js",
+        "-c",
+        "set -eu; revision=$(sed -n '/github: ai-outfitter\\/.agents/{n;s/^[[:space:]]*ref:[[:space:]]*//p;q;}' /workspace/.agents/settings.yml); test -n \"$revision\"; cache_key=$(printf '%s#%s' 'git+https://github.com/ai-outfitter/.agents.git' \"$revision\" | base64 -w0 | tr '+/' '-_' | tr -d '='); launcher=/workspace/.agents-cache/repos/$cache_key/scripts/forge-mcp-launch.js; test -f \"$launcher\"; exec node \"$launcher\" \"$@\"",
+        "forge-github-review",
         "reviewer",
         "get_me,issue_read,get_file_contents,pull_request_read,pull_request_review_write,add_comment_to_pending_review"
       ],

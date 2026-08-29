@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 
 const fs = require("node:fs");
-const { spawnSync } = require("node:child_process");
 
-const [role, tools] = process.argv.slice(2);
-const credentialsPath = process.env.A2A_CREDENTIALS_PATH;
-const tokenUrl = process.env.FORGE_TOKEN_URL;
+const prompt = process.argv[2] ?? "";
 
 async function main() {
-  if (!role || !tools) throw new Error("usage: forge-mcp-launch.js <role> <tools>");
+  if (/username/i.test(prompt)) {
+    process.stdout.write("x-access-token\n");
+    return;
+  }
+  if (!/password/i.test(prompt)) throw new Error("unsupported git credential prompt");
+
+  const credentialsPath = process.env.A2A_CREDENTIALS_PATH;
+  const tokenUrl = process.env.FORGE_TOKEN_URL;
   if (!credentialsPath || !tokenUrl) throw new Error("missing forge token environment");
   if (!/^https?:\/\//.test(tokenUrl)) throw new Error("FORGE_TOKEN_URL must use http or https");
 
@@ -27,7 +31,7 @@ async function main() {
       authorization: `Bearer ${credential.token}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify({ role }),
+    body: JSON.stringify({ role: "implementer" }),
   });
   if (!response.ok) throw new Error(`forge token request failed: ${response.status}`);
 
@@ -37,15 +41,8 @@ async function main() {
   } catch {
     throw new Error("forge token response was not JSON");
   }
-  const { token } = payload;
-  if (!token) throw new Error("forge token response missing token");
-
-  const child = spawnSync("github-mcp-server", ["stdio", "--tools", tools], {
-    stdio: "inherit",
-    env: { ...process.env, GITHUB_PERSONAL_ACCESS_TOKEN: token },
-  });
-  if (child.error) throw child.error;
-  process.exit(child.status ?? 1);
+  if (!payload.token) throw new Error("forge token response missing token");
+  process.stdout.write(`${payload.token}\n`);
 }
 
 main().catch((error) => {
