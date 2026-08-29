@@ -197,11 +197,20 @@ role-specific tool allowlist rather than accepting one from the caller. Every
 invocation MUST set `FORGE_REPOSITORY=owner/repo`; git invocations MUST also set
 `FORGE_TOKEN_ROLE` explicitly.
 
+Outfitter 1.11.0 does not ship `github-mcp-server`. As a compatibility measure,
+`scripts/ensure-github-mcp-server.js` downloads the pinned v1.8.0 Linux release
+with Node's `fetch`, verifies its embedded release checksum, and installs it in
+`$HOME/.local/bin` before the MCP driver spawns it. Shipping the pinned binary
+in the `ai-outfitter/outfitter` runtime image remains the intended fix; once
+that follow-up lands, the ensure helper will take its PATH short-circuit.
+
 Before repository-controlled checks run, the profile copies the askpass, MCP
-call, and checks helpers plus the MCP driver's `forge-token.js` dependency to a
-private `mktemp` directory, sets them to mode `0500`, records their digests,
-and uses only those copies afterwards. Preserve executable mode (`100755`) for
-`forge-git-askpass.js` and `run-repository-checks.js` in the catalog checkout.
+call, and checks helpers plus the MCP driver's `forge-token.js` and
+`ensure-github-mcp-server.js` dependencies to a private `mktemp` directory,
+sets them to mode `0500`, records their digests, and uses only those copies
+afterwards. Preserve executable mode (`100755`) for `forge-git-askpass.js`,
+`ensure-github-mcp-server.js`, and `run-repository-checks.js` in the catalog
+checkout.
 
 Repository-provided checks run through the private copied
 `run-repository-checks.js`, which constructs a minimal environment containing

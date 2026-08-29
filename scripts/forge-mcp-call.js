@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const readline = require("node:readline");
 const { spawn } = require("node:child_process");
 const { requestForgeToken } = require("./forge-token");
+const { ensureGithubMcpServer } = require("./ensure-github-mcp-server");
 
 const [role, inputPath] = process.argv.slice(2);
 const ROLE_TOOLS = Object.freeze({
@@ -50,8 +51,9 @@ async function main() {
       throw new Error(`MCP tool ${request.params.name} is not allowed for role ${role}`);
     }
   }
+  const serverPath = process.env.GITHUB_MCP_SERVER || await ensureGithubMcpServer();
   const token = await requestForgeToken({ role, repository });
-  const child = spawn("github-mcp-server", ["stdio", "--tools", allowedTools.join(",")], {
+  const child = spawn(serverPath, ["stdio", "--tools", allowedTools.join(",")], {
     stdio: ["pipe", "pipe", "inherit"],
     env: { ...process.env, GITHUB_PERSONAL_ACCESS_TOKEN: token },
   });

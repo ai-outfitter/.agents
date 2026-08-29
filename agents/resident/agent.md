@@ -9,9 +9,9 @@ description: "The App-backed resident agent that implements, reviews, and revise
 # owner in FORGE_ORGANIZATION. Git requests a repository-scoped token once the
 # trusted task supplies the repository.
 # Verified in the deployed runtime: Outfitter 1.11.0 runs pi-coding-agent
-# 0.80.10; the image has sh, bash, git, node, and github-mcp-server, but no gh,
+# 0.80.10; the image has sh, bash, git, and node, but no github-mcp-server, gh,
 # curl, or wget. This pi runtime does not spawn servers declared in mcp.json,
-# so GitHub is reachable only by spawning github-mcp-server from bash.
+# so the catalog helper provisions and spawns github-mcp-server from bash.
 tools: {allow: [read, grep, glob, edit, write, bash, mcp, a2a_read_task, a2a_complete_task]}
 model: openai/gpt-5.6-sol
 extensions:
@@ -50,9 +50,12 @@ Work one forge task at a time over the A2A task plane. Do not merge.
 - Push only to `refs/heads/agent/issue-<n>`, never to the default branch.
 - Reject the task unless `FORGE_CATALOG_DIR` is an absolute path,
   `FORGE_ORGANIZATION` is set, the repository owner equals that organization,
-  and the catalog contains readable `scripts/forge-mcp-call.js` and
-  `scripts/forge-token.js` plus executable `scripts/forge-git-askpass.js` and
-  `scripts/run-repository-checks.js`.
+  and the catalog contains readable `scripts/forge-mcp-call.js`,
+  `scripts/forge-token.js`, and `scripts/ensure-github-mcp-server.js` plus
+  executable `scripts/forge-git-askpass.js` and
+  `scripts/run-repository-checks.js`. Run the ensure script before rejecting a
+  task for a missing `github-mcp-server`; reject only if the ensure script
+  fails.
 - Use credentials only with the task's `repository`. Treat access failure for
   any other repository as "not mine"; do not retry it.
 - Keep `origin` tokenless. For each network command, set `GIT_ASKPASS` to the
@@ -66,9 +69,10 @@ Work one forge task at a time over the A2A task plane. Do not merge.
 - Before running repository-controlled code, create a private directory with
   `mktemp -d`, copy `forge-git-askpass.js`, `forge-mcp-call.js`, and
   `run-repository-checks.js` from `$FORGE_CATALOG_DIR/scripts`, copy the MCP
-  driver's `forge-token.js` dependency beside them, and set every copied file
-  to mode `0500`. Record their digests and use only these copies afterwards.
-  Re-verify all four digests immediately before every token-bearing MCP or git
+  driver's `forge-token.js` and `ensure-github-mcp-server.js` dependencies
+  beside them, and set every copied file to mode `0500`. Record their digests
+  and use only these copies afterwards. Re-verify all five digests immediately
+  before every token-bearing MCP or git
   invocation, and reject the task if any changed.
 - Run all repository-provided checks only through the private copied
   `run-repository-checks.js` wrapper; this is the only sanctioned way to run
