@@ -67,11 +67,57 @@ kubectl apply -f deploy/rbac.yaml
 
 ## 4. Per-deployment secrets: two GitHub tokens each, for luce and vega
 
+Create or rotate one deployment without putting values in command arguments:
+
+```sh
+/tmp/ks-outfitter-secret-one-shot luce
+/tmp/ks-outfitter-secret-one-shot vega
+/tmp/ks-outfitter-secret-one-shot outfitter-bot
+```
+
+The one-shot updates `ks-config/secrets/org.outfitter.yaml`, automatically
+selects the connected YubiKey, requires the `nonprod` Kubernetes context,
+performs a server-side dry run, applies only that agent's keys, and verifies
+the resulting key set.
+
 Luce and Vega are **shared-persona accounts** (`luce-unsup`, `vega-unsup`) —
 the same GitHub machine accounts other organizations' deployments of these
 personas also use. What is per organization is the **credential pair**, not
 the account: mint this deployment's own tokens, never reuse another
 deployment's.
+
+### Provider credential names
+
+Provider dashboards already supply part of a credential's context, so names
+carry only what is missing there. The `oft-` marker identifies an
+Outfitter-fleet credential. This catalog's organization slug is `outfitter`
+and these agents run in the `nonprod` target.
+
+- A GitHub machine account already identifies the agent. Name its fine-grained
+  work PAT `oft-<org>-<target>` and its classic notifications-only PAT
+  `oft-<org>-<target>-notify`.
+- Put inference credentials in the provider project
+  `oft-<org>-agents`. The project identifies the organization, so name each
+  OpenAI or Gemini key `<agent>-<target>`.
+- For another credential in the same provider and context, append a narrow
+  purpose such as `-catalog` or `-ghcr`.
+
+| Agent | Runtime key | Provider container | Exact provider name |
+| --- | --- | --- | --- |
+| `luce` | `GITHUB_PERSONAL_ACCESS_TOKEN` | GitHub account `luce-unsup` | `oft-outfitter-nonprod` |
+| `luce` | `GITHUB_NOTIFY_TOKEN` | GitHub account `luce-unsup` | `oft-outfitter-nonprod-notify` |
+| `luce` | `OPENAI_API_KEY` | OpenAI project `oft-outfitter-agents` | `luce-nonprod` |
+| `vega` | `GITHUB_PERSONAL_ACCESS_TOKEN` | GitHub account `vega-unsup` | `oft-outfitter-nonprod` |
+| `vega` | `GITHUB_NOTIFY_TOKEN` | GitHub account `vega-unsup` | `oft-outfitter-nonprod-notify` |
+| `vega` | `OPENAI_API_KEY` | OpenAI project `oft-outfitter-agents` | `vega-nonprod` |
+| `outfitter-bot` | `GITHUB_PERSONAL_ACCESS_TOKEN` | its dedicated GitHub account | `oft-outfitter-nonprod` |
+| `outfitter-bot` | `GITHUB_NOTIFY_TOKEN` | its dedicated GitHub account | `oft-outfitter-nonprod-notify` |
+
+The GitHub organization resource owner remains `ai-outfitter`; that scope is
+recorded separately because the catalog slug need not equal the forge login.
+The controlled targets are `nonprod`, `prod`, `ocean`, `kube`,
+`action-org`, and `action-project`; choose the single most specific one.
+Slack tokens are named from their Slack app and are outside this convention.
 
 | Variable | Kind | Scope |
 | --- | --- | --- |
@@ -106,6 +152,10 @@ namespace, everything projected `as: env`** — no side ConfigMap. Set
 `GITHUB_NOTIFY_ORGS` as a fourth key in that same Secret rather than opening a
 second config surface:
 
+Set the token note to exactly `oft-outfitter-nonprod-notify` when you create
+the classic token, and to exactly `oft-outfitter-nonprod` when you create the
+fine-grained token.
+
 ```sh
 kubectl create namespace agent-outfitter-luce
 
@@ -116,9 +166,11 @@ kubectl -n agent-outfitter-luce create secret generic agent-credentials \
   --from-literal=GITHUB_NOTIFY_ORGS='ai-outfitter'
 ```
 
-Repeat for `agent-outfitter-vega` with `vega-unsup`, and for
+Repeat for `agent-outfitter-vega` with `vega-unsup` (token notes
+`oft-outfitter-nonprod-notify` and `oft-outfitter-nonprod`), and for
 `agent-outfitter-outfitter-bot` with its dedicated account and no
-`GITHUB_NOTIFY_ORGS` key.
+`GITHUB_NOTIFY_ORGS` key (the same two names are unambiguous because that
+agent has its own GitHub account).
 
 Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
 `unset HISTFILE` first, so tokens do not land in shell history. Verify the
