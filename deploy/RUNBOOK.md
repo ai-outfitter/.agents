@@ -67,67 +67,57 @@ kubectl apply -f deploy/rbac.yaml
 
 ## 4. Per-deployment secrets: two GitHub tokens each, for luce and vega
 
+Create or rotate one deployment without putting values in command arguments:
+
+```sh
+/tmp/ks-outfitter-secret-one-shot luce
+/tmp/ks-outfitter-secret-one-shot vega
+/tmp/ks-outfitter-secret-one-shot outfitter-bot
+```
+
+The one-shot updates `ks-config/secrets/org.outfitter.yaml`, automatically
+selects the connected YubiKey, requires the `nonprod` Kubernetes context,
+performs a server-side dry run, applies only that agent's keys, and verifies
+the resulting key set.
+
 Luce and Vega are **shared-persona accounts** (`luce-unsup`, `vega-unsup`) —
 the same GitHub machine accounts other organizations' deployments of these
 personas also use. What is per organization is the **credential pair**, not
 the account: mint this deployment's own tokens, never reuse another
 deployment's.
 
-### Token note names
+### Provider credential names
 
-One GitHub account can serve more than one org-scoped deployment — for
-example, `luce-unsup` also serves the `Unsupervisedcom` deployment. The
-account's token list is flat, so the note is the only thing that tells two
-deployments' tokens apart. The note is also the first link in a chain a
-human can grep: token note → secret key → namespace agent → CR name.
+Provider dashboards already supply part of a credential's context, so names
+carry only what is missing there. The `oft-` marker identifies an
+Outfitter-fleet credential. This catalog's organization slug is `outfitter`
+and these agents run in the `nonprod` target.
 
-When you mint a GitHub token for an agent in this catalog, you MUST set its
-note to `oft-<org-prefix>-<agent>-<role>`:
+- A GitHub machine account already identifies the agent. Name its fine-grained
+  work PAT `oft-<org>-<target>` and its classic notifications-only PAT
+  `oft-<org>-<target>-notify`.
+- Put inference credentials in the provider project
+  `oft-<org>-agents`. The project identifies the organization, so name each
+  OpenAI or Gemini key `<agent>-<target>`.
+- For another credential in the same provider and context, append a narrow
+  purpose such as `-catalog` or `-ghcr`.
 
-- `org-prefix` is this catalog's `organization` value in
-  [`clusters.yaml`](../clusters.yaml) — `outfitter`.
-- `agent` is the agent ID, matching its directory under `agents/`.
-- `role` is the key the token fills: `work` for
-  `GITHUB_PERSONAL_ACCESS_TOKEN`, `notify` for `GITHUB_NOTIFY_TOKEN`.
+| Agent | Runtime key | Provider container | Exact provider name |
+| --- | --- | --- | --- |
+| `luce` | `GITHUB_PERSONAL_ACCESS_TOKEN` | GitHub account `luce-unsup` | `oft-outfitter-nonprod` |
+| `luce` | `GITHUB_NOTIFY_TOKEN` | GitHub account `luce-unsup` | `oft-outfitter-nonprod-notify` |
+| `luce` | `OPENAI_API_KEY` | OpenAI project `oft-outfitter-agents` | `luce-nonprod` |
+| `vega` | `GITHUB_PERSONAL_ACCESS_TOKEN` | GitHub account `vega-unsup` | `oft-outfitter-nonprod` |
+| `vega` | `GITHUB_NOTIFY_TOKEN` | GitHub account `vega-unsup` | `oft-outfitter-nonprod-notify` |
+| `vega` | `OPENAI_API_KEY` | OpenAI project `oft-outfitter-agents` | `vega-nonprod` |
+| `outfitter-bot` | `GITHUB_PERSONAL_ACCESS_TOKEN` | its dedicated GitHub account | `oft-outfitter-nonprod` |
+| `outfitter-bot` | `GITHUB_NOTIFY_TOKEN` | its dedicated GitHub account | `oft-outfitter-nonprod-notify` |
 
-| Agent | Env key | Token note |
-| --- | --- | --- |
-| `luce` | `GITHUB_PERSONAL_ACCESS_TOKEN` | `oft-outfitter-luce-work` |
-| `luce` | `GITHUB_NOTIFY_TOKEN` | `oft-outfitter-luce-notify` |
-| `vega` | `GITHUB_PERSONAL_ACCESS_TOKEN` | `oft-outfitter-vega-work` |
-| `vega` | `GITHUB_NOTIFY_TOKEN` | `oft-outfitter-vega-notify` |
-| `outfitter-bot` | `GITHUB_PERSONAL_ACCESS_TOKEN` | `oft-outfitter-outfitter-bot-work` |
-| `outfitter-bot` | `GITHUB_NOTIFY_TOKEN` | `oft-outfitter-outfitter-bot-notify` |
-
-This catalog has no `CATALOG_TOKEN` key, so there is no `catalog` role here.
-If you ever mint a per-agent `read:packages` PAT for `ghcr-pull` instead of
-reusing a shared one, set its note to `oft-outfitter-<agent>-ghcr`.
-
-A fine-grained PAT name MUST be unique per account, and GitHub caps it at 40
-characters — this convention's longest current value,
-`oft-outfitter-outfitter-bot-notify`, is 30 characters. A classic token note has
-no such uniqueness check, so this convention is the only guard against two
-classic tokens sharing one ambiguous name.
-
-The `oft-` marker identifies a token as Outfitter-fleet-managed. A token on a
-machine account MUST carry the `oft-` note prefix. Treat a token without it as
-unmanaged: investigate it or revoke it.
-
-The same grammar covers each agent's OpenAI key. Mint it in a dedicated
-OpenAI project that has a budget set — one key per deployment; project
-naming is free-form (the current fleet keys live in a project named
-`ai-outfitter/unsupervised`), and users MAY structure projects in a more
-complex way when they need it. We suggest the key name
-`oft-<org-prefix>-<agent>-model`: `oft-outfitter-luce-model`,
-`oft-outfitter-vega-model`, `oft-outfitter-outfitter-bot-model`. The role
-is `model`, not the vendor name, so the convention survives a provider
-change. These names are a suggestion, not a gate — OpenAI key names carry
-no enforcement; following the grammar keeps the key greppable against the
-secret key, the namespace, and the CR.
-
-
-Slack tokens are out of scope for this convention; name them from the Slack
-app they belong to.
+The GitHub organization resource owner remains `ai-outfitter`; that scope is
+recorded separately because the catalog slug need not equal the forge login.
+The controlled targets are `nonprod`, `prod`, `ocean`, `kube`,
+`action-org`, and `action-project`; choose the single most specific one.
+Slack tokens are named from their Slack app and are outside this convention.
 
 | Variable | Kind | Scope |
 | --- | --- | --- |
@@ -162,8 +152,8 @@ namespace, everything projected `as: env`** — no side ConfigMap. Set
 `GITHUB_NOTIFY_ORGS` as a fourth key in that same Secret rather than opening a
 second config surface:
 
-Set the token note to exactly `oft-outfitter-luce-notify` when you create the
-classic token, and to exactly `oft-outfitter-luce-work` when you create the
+Set the token note to exactly `oft-outfitter-nonprod-notify` when you create
+the classic token, and to exactly `oft-outfitter-nonprod` when you create the
 fine-grained token.
 
 ```sh
@@ -177,10 +167,10 @@ kubectl -n agent-outfitter-luce create secret generic agent-credentials \
 ```
 
 Repeat for `agent-outfitter-vega` with `vega-unsup` (token notes
-`oft-outfitter-vega-notify` and `oft-outfitter-vega-work`), and for
+`oft-outfitter-nonprod-notify` and `oft-outfitter-nonprod`), and for
 `agent-outfitter-outfitter-bot` with its dedicated account and no
-`GITHUB_NOTIFY_ORGS` key (token notes `oft-outfitter-outfitter-bot-notify` and
-`oft-outfitter-outfitter-bot-work`).
+`GITHUB_NOTIFY_ORGS` key (the same two names are unambiguous because that
+agent has its own GitHub account).
 
 Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
 `unset HISTFILE` first, so tokens do not land in shell history. Verify the
