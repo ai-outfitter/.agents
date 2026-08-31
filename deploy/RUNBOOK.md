@@ -125,6 +125,10 @@ Install Agent Operator v0.12 before applying this catalog. Confirm both fields
 exist with `kubectl explain organizations.spec.credentialSecretName` and
 `kubectl explain agents.spec.credentialSecretName`.
 
+Every Agent pins the organization runtime image by digest. It carries
+Outfitter 1.11.0, explicit agent inheritance, transitive source resolution,
+and `github-mcp-server`; do not fall back to the operator's stock 1.5.0 image.
+
 Create `secret/organization-credentials` once in namespace `org-outfitter`
 with `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
 header consumed by `models.json`. Agent Operator v0.12 inherits it into every

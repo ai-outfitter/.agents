@@ -23,6 +23,7 @@ spec:
     agent: outfitter-bot
     harness: pi
   credentialSecretName: agent-credentials
+  image: ghcr.io/ai-outfitter/outfitter-agent@sha256:04ff0e2583392a664cf7df8cb5a992947f7f335c03dac034e9ee0f55bdd2302b
   setup:
     - name: catalog-bootstrap
       script: |
