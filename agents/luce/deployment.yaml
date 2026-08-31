@@ -23,7 +23,7 @@ spec:
     agent: luce-ai-outfitter
     harness: pi
   credentialSecretName: agent-credentials
-  image: ghcr.io/ai-outfitter/outfitter-agent@sha256:04ff0e2583392a664cf7df8cb5a992947f7f335c03dac034e9ee0f55bdd2302b
+  image: ghcr.io/unsupervisedcom/nonprod-bot-agent:6f08c52-r33429105296
   envFrom:
     - configMapRef:
         name: luce-runtime
@@ -58,6 +58,10 @@ spec:
           mv "$catalog" "$stale"
         fi
         mv "$temporary" "$catalog"
+        state_directory="/workspace/.agents-cache/source-state"
+        mkdir -p "$state_directory"
+        printf '%s\n' "{\"version\":1,\"source\":\"$source_uri\",\"requestedRef\":\"$revision\",\"resolvedCommit\":\"$revision\",\"cacheKey\":\"$cache_key\"}" > "$state_directory/$cache_key.json"
+        chmod 0600 "$state_directory/$cache_key.json"
         rm -rf "$stale"
 
         cp_uri="git+https://github.com/ai-outfitter/community-profiles.git"
@@ -76,9 +80,12 @@ spec:
         git -C "$cp_tmp" remote add origin "$cp_repo"
         git -C "$cp_tmp" fetch --quiet --depth 1 origin "refs/tags/$cp_ref"
         git -C "$cp_tmp" checkout --quiet --detach FETCH_HEAD
+        cp_commit="$(git -C "$cp_tmp" rev-parse HEAD)"
         test -f "$cp_tmp/agents/luce/agent.md"
         if [ -e "$cp_catalog" ]; then rm -rf "$cp_catalog"; fi
         mv "$cp_tmp" "$cp_catalog"
+        printf '%s\n' "{\"version\":1,\"source\":\"$cp_uri\",\"requestedRef\":\"$cp_ref\",\"resolvedCommit\":\"$cp_commit\",\"cacheKey\":\"$cp_key\"}" > "$state_directory/$cp_key.json"
+        chmod 0600 "$state_directory/$cp_key.json"
     # Luce pushes her branch with git over HTTPS: the runtime image has git but
     # no gh, curl, or wget. GIT_ASKPASS answers the credential prompt from the
     # environment, so the token never lands on disk and never appears in a

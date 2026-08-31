@@ -98,6 +98,8 @@ kubectl -n agent-outfitter-luce create configmap luce-runtime \
 
 Repeat for `agent-outfitter-vega` with `vega-unsup` and `vega-runtime`.
 `outfitter-bot` uses its dedicated account and needs no organization filter.
+Create `outfitter-bot-runtime` with the other three channel keys and omit only
+`GITHUB_NOTIFY_ORGS`.
 
 Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
 `unset HISTFILE` first, so tokens do not land in shell history. Verify the
@@ -125,9 +127,10 @@ Install Agent Operator v0.12 before applying this catalog. Confirm both fields
 exist with `kubectl explain organizations.spec.credentialSecretName` and
 `kubectl explain agents.spec.credentialSecretName`.
 
-Every Agent pins the organization runtime image by digest. It carries
-Outfitter 1.11.0, explicit agent inheritance, transitive source resolution,
-and `github-mcp-server`; do not fall back to the operator's stock 1.5.0 image.
+Every Agent pins the same version-tagged organization runtime. It carries
+Outfitter 1.13.0 and `github-mcp-server`; do not use the moving `latest` tag or
+fall back to the operator's stock image. The setup step writes Outfitter's
+versioned source-state manifests for the exact catalog revisions it fetches.
 
 Create `secret/organization-credentials` once in namespace `org-outfitter`
 with `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
@@ -144,7 +147,7 @@ For each agent (`outfitter-luce`, `outfitter-vega`,
 2. Create `secret/agent-credentials` with the keys in the table above. Do not
    add `OPENAI_API_KEY` or a directly managed `SPARK_AUTHORIZATION`.
 3. Create `secret/ghcr-pull` and patch the `agent-runtime` ServiceAccount with
-   it, if the pinned runtime image is private:
+   it because the runtime image is private:
 
    ```sh
    kubectl -n agent-<agent-name> patch serviceaccount agent-runtime \
@@ -156,6 +159,10 @@ For each agent (`outfitter-luce`, `outfitter-vega`,
    test issue wakes the agent within one poll interval, and it either
    answers (Luce, outfitter-bot) or posts a `COMMENT`/`REQUEST_CHANGES`
    review (Vega) — never a push to `main`, never an `APPROVE`.
+
+After reconciliation, each `agent-credentials` Secret MUST contain
+`SPARK_AUTHORIZATION` inherited from the organization and MUST NOT contain
+`OPENAI_API_KEY`, `GITHUB_NOTIFY_ORGS`, or `OUTFITTER_CHANNELS`.
 
 ## Failure modes worth recognising
 
