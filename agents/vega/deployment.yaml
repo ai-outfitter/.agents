@@ -18,6 +18,7 @@ metadata:
   name: __ORG__
 spec:
   displayName: AI Outfitter
+  credentialSecretName: organization-credentials
   agentCatalogs:
     # Identical, byte-for-byte after render, to the Organization block in
     # agents/luce/deployment.yaml and agents/outfitter-bot/deployment.yaml.
@@ -37,16 +38,9 @@ spec:
   profile:
     agent: vega
     harness: pi
-  credentials:
-    # One Secret carries every credential this agent needs, projected as env.
-    # Same shape as agents/luce/deployment.yaml:
-    #
-    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
-    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
-    #   GITHUB_USER                    the machine account's login
-    #   GITHUB_NOTIFY_ORGS             ai-outfitter — see deploy/RUNBOOK.md
-    - secret: agent-credentials
-      as: env
+  credentialSecretName: agent-credentials
+  # One Secret carries every credential this agent needs, projected as env.
+  # Same shape as agents/luce/deployment.yaml.
   setup:
     # The runtime is offline (`outfitter run --strict`): it never fetches a
     # catalog at startup. This step clones the org catalog at the pinned

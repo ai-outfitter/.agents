@@ -20,6 +20,7 @@ metadata:
   name: __ORG__
 spec:
   displayName: AI Outfitter
+  credentialSecretName: organization-credentials
   agentCatalogs:
     # Identical, byte-for-byte after render, to the Organization block in
     # agents/luce/deployment.yaml and agents/vega/deployment.yaml. See that
@@ -38,16 +39,8 @@ spec:
   profile:
     agent: outfitter-bot
     harness: pi
-  credentials:
-    # outfitter-bot holds its own dedicated ai-outfitter-only machine
-    # account — it is not one of the shared-persona accounts (luce-unsup,
-    # vega-unsup) — so it needs no GITHUB_NOTIFY_ORGS split.
-    #
-    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
-    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
-    #   GITHUB_USER                    the machine account's login
-    - secret: agent-credentials
-      as: env
+  credentialSecretName: agent-credentials
+  # outfitter-bot holds its own dedicated ai-outfitter-only machine account.
   setup:
     - name: catalog-bootstrap
       script: |

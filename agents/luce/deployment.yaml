@@ -29,6 +29,7 @@ metadata:
   name: __ORG__
 spec:
   displayName: AI Outfitter
+  credentialSecretName: organization-credentials
   agentCatalogs:
     # Public catalog: it resolves anonymously, so no catalog credential and no
     # private-catalog setup step. The name must match the workflow's
@@ -54,11 +55,8 @@ spec:
   profile:
     agent: luce
     harness: pi
-  credentials:
-    # One Secret carries every credential this agent needs, projected as env.
-    # The keys are the standard forge names plus GITHUB_NOTIFY_ORGS — nothing
-    # else is namespaced to this agent, so the same Secret shape works for any
-    # GitHub-backed agent in the fleet.
+  credentialSecretName: agent-credentials
+  # One Secret carries every credential this agent needs, projected as env.
     #
     #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
     #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
@@ -76,8 +74,6 @@ spec:
     # defaults to the reasons this agent wants, and to a 60s poll floor, and
     # auto-detects the sources whose credentials are present. See
     # deploy/RUNBOOK.md.
-    - secret: agent-credentials
-      as: env
   setup:
     # The runtime is offline (`outfitter run --strict`): it never fetches a
     # catalog at startup. This step clones the org catalog at the pinned

@@ -157,9 +157,11 @@ For each agent (`outfitter-luce`, `outfitter-vega`,
      -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
    ```
 
-4. Seed Pi model authentication into the stopped workspace PVC (see this
-   cluster's existing model-auth seeding procedure); `Ready` does not prove a
-   model turn works.
+4. Create `secret/organization-credentials` in namespace `org-outfitter` with
+   `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
+   header consumed by `models.json`. Agent Operator v0.12 inherits it into
+   every member Agent as `SPARK_AUTHORIZATION`; never print it or store it in
+   this repository. `Ready` does not prove a model turn works.
 5. Apply this catalog once (`workflow_dispatch`, or push to `main`), wait for
    `Ready` with the expected resolved revision, then verify: an assigned
    test issue wakes the agent within one poll interval, and it either

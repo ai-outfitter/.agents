@@ -21,12 +21,10 @@ description: "The ai-outfitter organization's resident agent — triages a repor
 tools: {allow: [channel_read, channel_respond, read, grep, glob, edit, write, bash, mcp]}
 mcp:
   - github-write
-# The openai provider in models.json reads $OPENAI_API_KEY — one key per
-# resident agent (its own OpenAI project), so the usage dashboard attributes
-# spend per agent. The deployment's Secret supplies it; without a selected
-# model the runtime has no credential and every wake dies with "No API key
-# found for the selected model".
-model: openai/gpt-5.6-sol
+# The deployment's Secret supplies the complete Spark Basic Authorization
+# header as $SPARK_AUTHORIZATION. models.json uses it both as Pi's credential
+# reference and as the upstream Authorization header.
+model: dgx-spark/GLM-5.3-Flash-EXL3
 extensions:
   # channels v1.6.1 (A2A task plane) by its release commit: tag v1.6.1 =
   # 03fb6d2, the current main tip. The relay wire protocol is unversioned,
