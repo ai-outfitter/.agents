@@ -4,6 +4,7 @@ description: "The ai-outfitter organization's resident agent — works feature-r
 tools: {allow: [read, grep, glob, edit, write, bash, mcp]}
 mcp:
   - github-write
+model: dgx-spark/GLM-5.3-Flash-EXL3
 extensions:
   # channels v1.6.1 (A2A task plane) by its release commit: tag v1.6.1 =
   # 03fb6d2, the current main tip. The relay wire protocol is unversioned,

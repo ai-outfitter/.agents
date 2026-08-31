@@ -83,18 +83,16 @@ jobs:
           esac
           aws eks update-kubeconfig --name nonprod --region us-east-1
 
-      # ea7e070 is the squash-merge of ai-outfitter/agent-operator#46 on main.
-      # It carries the `cluster` input this workflow depends on, the
-      # `__ORG__`-rendering this catalog's manifests need, and the doc commit
-      # that names `organization: outfitter` for this catalog by example —
-      # matching what clusters.yaml declares.
+      # f1f76c6 is the release commit for agent-operator v0.12.0. It carries
+      # the standardized Organization/Agent credential API used by these
+      # manifests, plus cluster selection and `__ORG__` rendering.
       #
       # Exact-SHA pin, updated deliberately: this action patches custom
       # resources whose API group already changed once (link.aioutfitter.com
       # → aioutfitter.com), so the deploy step and the CRDs it patches move
       # as one bump.
       - name: Deploy the nonprod cluster
-        uses: ai-outfitter/agent-operator/actions/deploy-catalog@ea7e0706297d4884a457df0cc6236011a349f021
+        uses: ai-outfitter/agent-operator/actions/deploy-catalog@f1f76c6ed48b201e6a95d3c310a9a8387e6c6dd2
         with:
           cluster: nonprod
           revision: ${{ github.sha }}

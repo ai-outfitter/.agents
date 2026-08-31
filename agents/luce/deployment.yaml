@@ -1,45 +1,13 @@
-# Luce's fleet declaration. deploy-catalog selects agents from clusters.yaml,
-# so this file's existence is what puts Luce in the fleet once `luce` is named
-# there, and CI renders __REVISION__ with the merge commit that produced it:
-# the profile beside this file and the revision the cluster resolves are the
-# same commit by construction. __ORG__ renders to the deployment prefix named
-# in clusters.yaml (outfitter — a short prefix, not the ai-outfitter GitHub
-# login) — see that file's header for why the Agent name carries it.
-#
-# Bootstrap is an administrator's, not CI's: the agent-__ORG__-luce namespace
-# and the agent-credentials Secret must exist before the first deploy, and the
-# deploy role needs __ORG__-luce in its resourceNames. See deploy/RUNBOOK.md.
-#
-# `Agent` is CLUSTER-SCOPED and owns its namespace, and one Luce persona is
-# deployed once per organization — so the Agent name carries the
-# organization. `Agent/__ORG__-luce` gets namespace `agent-__ORG__-luce`, its
-# own quota, and its own Secret, and can never collide with another
-# organization's Luce on a shared cluster. A bare `Agent/luce` would: applying
-# it where another org's Luce holds that name takes over the object, and
-# deleting or renaming an Agent cascade-deletes its namespace including the
-# workspace PVC.
-#
-# deploy-catalog requires this directory's name to equal the profile id
-# (`luce`) and requires the manifest to declare the Agent name the id
-# promises, prefixed with the rendered organization; the profile it runs
-# stays `agents/luce` via spec.profile.agent.
+# `Agent` is cluster-scoped and owns its namespace. Keep its name stable.
+# `__ORG__` and `__REVISION__` are rendered by deploy-catalog.
 apiVersion: aioutfitter.com/v1alpha1
 kind: Organization
 metadata:
   name: __ORG__
 spec:
   displayName: AI Outfitter
+  credentialSecretName: organization-credentials
   agentCatalogs:
-    # Public catalog: it resolves anonymously, so no catalog credential and no
-    # private-catalog setup step. The name must match the workflow's
-    # catalog-source input, which is what convergence is checked against.
-    # Identical, byte-for-byte after render, to the Organization block in
-    # agents/vega/deployment.yaml and agents/outfitter-bot/deployment.yaml.
-    # Duplicated deliberately rather than defined once: cluster selection in
-    # clusters.yaml is per agent, and a future edit that deploys a subset of
-    # this fleet must not leave the Organization pin stale because the one
-    # file that carried it wasn't in that subset. Server-side apply makes the
-    # duplication harmless — three identical applies converge to one object.
     - name: ai-outfitter-agents
       github: ai-outfitter/.agents
       revision: __REVISION__
@@ -52,46 +20,21 @@ spec:
   memberships:
     - organization: __ORG__
   profile:
-    agent: luce
+    agent: luce-ai-outfitter
     harness: pi
-  credentials:
-    # One Secret carries every credential this agent needs, projected as env.
-    # The keys are the standard forge names plus GITHUB_NOTIFY_ORGS — nothing
-    # else is namespaced to this agent, so the same Secret shape works for any
-    # GitHub-backed agent in the fleet.
-    #
-    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
-    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
-    #   GITHUB_USER                    the machine account's login
-    #   GITHUB_NOTIFY_ORGS             ai-outfitter — see deploy/RUNBOOK.md
-    #
-    # GITHUB_NOTIFY_ORGS is documented as a runtime ConfigMap key elsewhere in
-    # this org's planning notes; it is set here in agent-credentials instead,
-    # to keep this catalog's one-Secret-per-agent convention (see the
-    # "no side ConfigMap" rule this file's predecessor established) rather
-    # than opening a second, credential-adjacent config surface per agent. The
-    # env var name and behavior are unchanged.
-    #
-    # Everything else is left to its default: the channels source already
-    # defaults to the reasons this agent wants, and to a 60s poll floor, and
-    # auto-detects the sources whose credentials are present. See
-    # deploy/RUNBOOK.md.
-    - secret: agent-credentials
-      as: env
+  credentialSecretName: agent-credentials
+  image: ghcr.io/ai-outfitter/outfitter-agent@sha256:04ff0e2583392a664cf7df8cb5a992947f7f335c03dac034e9ee0f55bdd2302b
+  envFrom:
+    - configMapRef:
+        name: luce-runtime
   setup:
-    # The runtime is offline (`outfitter run --strict`): it never fetches a
-    # catalog at startup. This step clones the org catalog at the pinned
-    # revision into the exact path Outfitter derives for a remote source, so
-    # resolution succeeds with no runtime egress beyond this clone, and
-    # asserts the clone actually carries the `luce` profile before the agent
-    # container starts on it.
     - name: catalog-bootstrap
       script: |
         set -eu
         source_uri="git+https://github.com/ai-outfitter/.agents.git"
         repository="${source_uri#git+}"
         revision="__REVISION__"
-        profile="luce"
+        profile="luce-ai-outfitter"
         cache_key="$(
           printf '%s#%s' "$source_uri" "$revision" \
             | base64 -w0 | tr '+/' '-_' | tr -d '='
@@ -117,13 +60,6 @@ spec:
         mv "$temporary" "$catalog"
         rm -rf "$stale"
 
-        # Luce's profile may resolve TRANSITIVELY: settings.yml pins
-        # community-profiles by release tag, and outfitter run does not fetch
-        # remote sources itself. Pre-populate that cache too, keyed by the
-        # same uri#ref rule, even while agents/luce/agent.md carries a direct
-        # copy — this logic stays correct the moment that copy is retired in
-        # favor of the transitive profile. Bump the tag here and in
-        # settings.yml together.
         cp_uri="git+https://github.com/ai-outfitter/community-profiles.git"
         cp_repo="${cp_uri#git+}"
         cp_ref="v1.4.0"

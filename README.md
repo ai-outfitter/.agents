@@ -9,11 +9,10 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   the pinned community-profiles catalog source.
 - [`agents/outfitter-bot`](agents/outfitter-bot/agent.md) — the org's resident
   agent: works issues assigned to it into reviewed pull requests.
-- [`agents/luce`](agents/luce/agent.md) — the org's resident agent: triages a
-  report into a scoped issue with acceptance criteria, then works the issues
-  assigned to it into pull requests. Luce is a persona shared across
-  organizations; each deployment holds credentials for its own organization
-  only.
+- [`agents/luce-ai-outfitter`](agents/luce-ai-outfitter/agent.md) — the org's
+  resident agent: inherits the canonical `luce` profile from the pinned
+  community catalog, then adds this organization's triage and implementation
+  behavior. Each deployment holds credentials for its own organization only.
 - [`agents/vega`](agents/vega/agent.md) — the org's resident agent: reviews
   pull requests for correctness, failure modes, and test coverage. Vega is a
   persona shared across organizations, deployed the same way as Luce.
@@ -31,10 +30,6 @@ deployment prefix (`outfitter`) — `outfitter-luce`, `outfitter-vega`,
 `outfitter-outfitter-bot` — never a shared object with another catalog's
 deployment of the same persona. See [`deploy/RUNBOOK.md`](deploy/RUNBOOK.md)
 for administrator bootstrap.
-
-`Unsupervisedcom/.agents` no longer deploys this organization's agents; it did
-so as a guest until this catalog's own CI/CD existed. See
-`deploy/RUNBOOK.md`'s migration section.
 
 ## Using it
 
@@ -63,10 +58,3 @@ sources:
 
 You don't own this catalog; leaving it unpinned runs whatever is published
 next.
-
-## History
-
-This repository was previously `ai-outfitter/.outfitter` and carried the
-weekly org KPI automation. That machinery — workflow, reports skill, and the
-generated reports — now lives in
-[ai-outfitter/wiki](https://github.com/ai-outfitter/wiki).

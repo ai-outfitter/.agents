@@ -1,28 +1,13 @@
-# Vega's fleet declaration. deploy-catalog selects agents from clusters.yaml,
-# so this file's existence is what puts Vega in the fleet once `vega` is
-# named there, and CI renders __REVISION__ with the merge commit that
-# produced it. Modeled on agents/luce/deployment.yaml — see that file for the
-# comments on why the catalog is cloned into the pod, and why credentials and
-# namespace are per-organization, per-agent.
-#
-# Bootstrap is an administrator's, not CI's: the agent-__ORG__-vega namespace
-# and the agent-credentials Secret must exist before the first deploy, and the
-# deploy role needs __ORG__-vega in its resourceNames. See deploy/RUNBOOK.md.
-#
-# `Agent` is CLUSTER-SCOPED and owns its namespace. `Agent/__ORG__-vega` gets
-# namespace `agent-__ORG__-vega`, its own quota, and its own Secret, and can
-# never collide with another organization's Vega on a shared cluster.
+# `Agent` is cluster-scoped and owns its namespace. Keep its name stable.
+# `__ORG__` and `__REVISION__` are rendered by deploy-catalog.
 apiVersion: aioutfitter.com/v1alpha1
 kind: Organization
 metadata:
   name: __ORG__
 spec:
   displayName: AI Outfitter
+  credentialSecretName: organization-credentials
   agentCatalogs:
-    # Identical, byte-for-byte after render, to the Organization block in
-    # agents/luce/deployment.yaml and agents/outfitter-bot/deployment.yaml.
-    # See that file's comment for why it is duplicated rather than defined
-    # once.
     - name: ai-outfitter-agents
       github: ai-outfitter/.agents
       revision: __REVISION__
@@ -37,22 +22,12 @@ spec:
   profile:
     agent: vega
     harness: pi
-  credentials:
-    # One Secret carries every credential this agent needs, projected as env.
-    # Same shape as agents/luce/deployment.yaml:
-    #
-    #   GITHUB_NOTIFY_TOKEN            classic PAT, `notifications` only
-    #   GITHUB_PERSONAL_ACCESS_TOKEN   fine-grained PAT, this org only
-    #   GITHUB_USER                    the machine account's login
-    #   GITHUB_NOTIFY_ORGS             ai-outfitter — see deploy/RUNBOOK.md
-    - secret: agent-credentials
-      as: env
+  credentialSecretName: agent-credentials
+  image: ghcr.io/ai-outfitter/outfitter-agent@sha256:04ff0e2583392a664cf7df8cb5a992947f7f335c03dac034e9ee0f55bdd2302b
+  envFrom:
+    - configMapRef:
+        name: vega-runtime
   setup:
-    # The runtime is offline (`outfitter run --strict`): it never fetches a
-    # catalog at startup. This step clones the org catalog at the pinned
-    # revision into the exact path Outfitter derives for a remote source, and
-    # asserts the clone carries the `vega` profile before the agent container
-    # starts on it.
     - name: catalog-bootstrap
       script: |
         set -eu
@@ -84,8 +59,6 @@ spec:
         fi
         mv "$temporary" "$catalog"
         rm -rf "$stale"
-    # Vega only reviews — it never pushes a branch — so it needs no git
-    # credential helper, unlike Luce.
   workspace:
     resourceQuota:
       hard:
