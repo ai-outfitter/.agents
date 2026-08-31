@@ -9,11 +9,10 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   the pinned community-profiles catalog source.
 - [`agents/outfitter-bot`](agents/outfitter-bot/agent.md) — the org's resident
   agent: works issues assigned to it into reviewed pull requests.
-- [`agents/luce`](agents/luce/agent.md) — the org's resident agent: triages a
-  report into a scoped issue with acceptance criteria, then works the issues
-  assigned to it into pull requests. Luce is a persona shared across
-  organizations; each deployment holds credentials for its own organization
-  only.
+- [`agents/luce-ai-outfitter`](agents/luce-ai-outfitter/agent.md) — the org's
+  resident agent: inherits the canonical `luce` profile from the pinned
+  community catalog, then adds this organization's triage and implementation
+  behavior. Each deployment holds credentials for its own organization only.
 - [`agents/vega`](agents/vega/agent.md) — the org's resident agent: reviews
   pull requests for correctness, failure modes, and test coverage. Vega is a
   persona shared across organizations, deployed the same way as Luce.

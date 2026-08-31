@@ -20,7 +20,7 @@ spec:
   memberships:
     - organization: __ORG__
   profile:
-    agent: luce
+    agent: luce-ai-outfitter
     harness: pi
   credentialSecretName: agent-credentials
   envFrom:
@@ -33,7 +33,7 @@ spec:
         source_uri="git+https://github.com/ai-outfitter/.agents.git"
         repository="${source_uri#git+}"
         revision="__REVISION__"
-        profile="luce"
+        profile="luce-ai-outfitter"
         cache_key="$(
           printf '%s#%s' "$source_uri" "$revision" \
             | base64 -w0 | tr '+/' '-_' | tr -d '='

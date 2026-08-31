@@ -121,6 +121,16 @@ forge, not by the token or the profile.
 
 ## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
 
+Install Agent Operator v0.12 before applying this catalog. Confirm both fields
+exist with `kubectl explain organizations.spec.credentialSecretName` and
+`kubectl explain agents.spec.credentialSecretName`.
+
+Create `secret/organization-credentials` once in namespace `org-outfitter`
+with `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
+header consumed by `models.json`. Agent Operator v0.12 inherits it into every
+member Agent as `SPARK_AUTHORIZATION`; never print it or store it in this
+repository.
+
 For each agent (`outfitter-luce`, `outfitter-vega`,
 `outfitter-outfitter-bot`):
 
@@ -137,12 +147,7 @@ For each agent (`outfitter-luce`, `outfitter-vega`,
      -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
    ```
 
-4. Create `secret/organization-credentials` in namespace `org-outfitter` with
-   `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
-   header consumed by `models.json`. Agent Operator v0.12 inherits it into
-   every member Agent as `SPARK_AUTHORIZATION`; never print it or store it in
-   this repository. `Ready` does not prove a model turn works.
-5. Apply this catalog once (`workflow_dispatch`, or push to `main`), wait for
+4. Apply this catalog once (`workflow_dispatch`, or push to `main`), wait for
    `Ready` with the expected resolved revision, then verify: an assigned
    test issue wakes the agent within one poll interval, and it either
    answers (Luce, outfitter-bot) or posts a `COMMENT`/`REQUEST_CHANGES`
