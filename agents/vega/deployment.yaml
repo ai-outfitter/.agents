@@ -23,7 +23,7 @@ spec:
     agent: vega
     harness: pi
   credentialSecretName: agent-credentials
-  image: ghcr.io/ai-outfitter/outfitter-agent@sha256:04ff0e2583392a664cf7df8cb5a992947f7f335c03dac034e9ee0f55bdd2302b
+  image: ghcr.io/unsupervisedcom/nonprod-bot-agent:6f08c52-r33429105296
   envFrom:
     - configMapRef:
         name: vega-runtime
@@ -58,6 +58,10 @@ spec:
           mv "$catalog" "$stale"
         fi
         mv "$temporary" "$catalog"
+        state_directory="/workspace/.agents-cache/source-state"
+        mkdir -p "$state_directory"
+        printf '%s\n' "{\"version\":1,\"source\":\"$source_uri\",\"requestedRef\":\"$revision\",\"resolvedCommit\":\"$revision\",\"cacheKey\":\"$cache_key\"}" > "$state_directory/$cache_key.json"
+        chmod 0600 "$state_directory/$cache_key.json"
         rm -rf "$stale"
   workspace:
     resourceQuota:
