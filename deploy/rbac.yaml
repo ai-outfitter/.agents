@@ -24,14 +24,8 @@
 # credential, or touch the operator. Bootstrap remains an administrator's
 # job.
 #
-# The missing `delete` on agents matters more than it looks. `Agent` is
-# cluster-scoped and owns its namespace by owner reference, so deleting one
-# cascade-deletes every Secret, ConfigMap, and PVC beneath it — including the
-# workspace volume carrying Pi's authentication, with a StorageClass whose
-# reclaim policy is `Delete`. An identity able to delete an Agent can destroy
-# the credentials it is deliberately not allowed to read. See
-# deploy/RUNBOOK.md's migration section for the incident this rule exists
-# because of.
+# `delete` is deliberately absent: an Agent owns its namespace, so deleting
+# it also deletes the namespace's Secrets, ConfigMaps, and PVCs.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

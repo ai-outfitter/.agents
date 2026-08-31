@@ -1,19 +1,5 @@
-# outfitter-bot's fleet declaration. This file is NEW: no deployment.yaml for
-# outfitter-bot ever lived in this catalog — the live CR was deployed from
-# Unsupervisedcom/.agents as a guest (see deploy/RUNBOOK.md § Migration). This
-# is that manifest's org-scoped replacement, modeled on
-# agents/luce/deployment.yaml.
-#
-# The Agent name is __ORG__-outfitter-bot, which renders to
-# `outfitter-outfitter-bot` — the deployment prefix still stutters against
-# the profile id even after choosing `outfitter` over `ai-outfitter`. Left as
-# is: renaming the profile to `bot` would fix it, but not in this change; see
-# the PR body.
-#
-# Bootstrap is an administrator's, not CI's: the
-# agent-__ORG__-outfitter-bot namespace and the agent-credentials Secret must
-# exist before the first deploy, and the deploy role needs
-# __ORG__-outfitter-bot in its resourceNames. See deploy/RUNBOOK.md.
+# `Agent` is cluster-scoped and owns its namespace. Keep its name stable.
+# `__ORG__` and `__REVISION__` are rendered by deploy-catalog.
 apiVersion: aioutfitter.com/v1alpha1
 kind: Organization
 metadata:
@@ -22,9 +8,6 @@ spec:
   displayName: AI Outfitter
   credentialSecretName: organization-credentials
   agentCatalogs:
-    # Identical, byte-for-byte after render, to the Organization block in
-    # agents/luce/deployment.yaml and agents/vega/deployment.yaml. See that
-    # file's comment for why it is duplicated rather than defined once.
     - name: ai-outfitter-agents
       github: ai-outfitter/.agents
       revision: __REVISION__
@@ -40,7 +23,6 @@ spec:
     agent: outfitter-bot
     harness: pi
   credentialSecretName: agent-credentials
-  # outfitter-bot holds its own dedicated ai-outfitter-only machine account.
   setup:
     - name: catalog-bootstrap
       script: |

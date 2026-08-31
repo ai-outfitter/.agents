@@ -32,10 +32,6 @@ deployment prefix (`outfitter`) — `outfitter-luce`, `outfitter-vega`,
 deployment of the same persona. See [`deploy/RUNBOOK.md`](deploy/RUNBOOK.md)
 for administrator bootstrap.
 
-`Unsupervisedcom/.agents` no longer deploys this organization's agents; it did
-so as a guest until this catalog's own CI/CD existed. See
-`deploy/RUNBOOK.md`'s migration section.
-
 ## Using it
 
 Inside the ai-outfitter org, declare this repo unpinned as the repo's ONLY
@@ -63,10 +59,3 @@ sources:
 
 You don't own this catalog; leaving it unpinned runs whatever is published
 next.
-
-## History
-
-This repository was previously `ai-outfitter/.outfitter` and carried the
-weekly org KPI automation. That machinery — workflow, reports skill, and the
-generated reports — now lives in
-[ai-outfitter/wiki](https://github.com/ai-outfitter/wiki).

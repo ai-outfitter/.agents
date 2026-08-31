@@ -7,19 +7,6 @@ exactly that set. CI only **moves objects that already exist**; this document
 is what an administrator does once, by hand, before the first deploy of a new
 agent.
 
-## Dependency: agent-operator PR #46 must merge
-
-`clusters.yaml`'s `organization: outfitter` key and the `__ORG__` token in
-every `deployment.yaml` depend on a `deploy-catalog` feature that has not
-merged as of 2026-08-19: `organization` is a short deployment prefix, not
-necessarily the GitHub org login, and this catalog deliberately chose
-`outfitter` rather than `ai-outfitter` — shorter, and it also avoids the
-`ai-outfitter-outfitter-bot` stutter (rendering `outfitter-outfitter-bot`
-instead). The pin in `deploy.yml` (`ea7e0706297d4884a457df0cc6236011a349f021`)
-is the squash-merge of `ai-outfitter/agent-operator#46` on `main`
-(merged 2026-08-20). It includes `__ORG__` rendering and documents
-`organization: outfitter` as this catalog's own example.
-
 ## 1. IAM role for the deploy identity
 
 Create `ai-outfitter-catalog-deploy` in account `216577824627` (the account the
@@ -78,7 +65,6 @@ deployment's.
 | `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`** only, limited to the repositories the agent works |
 | `GITHUB_USER` | — | the machine account's login |
-| `GITHUB_NOTIFY_ORGS` | — | `ai-outfitter` |
 
 `outfitter-bot` holds a dedicated ai-outfitter-only machine account, not a
 shared persona, so it needs only the first three keys — there is no other
@@ -91,20 +77,9 @@ access to code, collaborators, and webhooks on every repository the shared
 account can reach, in every organization it belongs to — classic scopes have
 no organization selector.
 
-**Why `GITHUB_NOTIFY_ORGS` exists.** The wake token has no organization
-boundary: it sees notifications for every organization the shared account
-belongs to, so both a `luce-unsup` deployment here and one deployed for
-another organization wake on the same notification stream (a Channels
-feature in flight). `GITHUB_NOTIFY_ORGS=ai-outfitter` is what lets this
-deployment recognize a wake naming another organization's repository and
-settle it without acting, instead of relying on the profile alone to
-self-filter. Set it on every deployment of a shared-persona account; skip it
-for a dedicated account like `outfitter-bot`, which has nothing to filter.
-
-This catalog's convention is **one `agent-credentials` Secret per agent
-namespace, everything projected `as: env`** — no side ConfigMap. Set
-`GITHUB_NOTIFY_ORGS` as a fourth key in that same Secret rather than opening a
-second config surface:
+Each agent has one `agent-credentials` Secret for its GitHub identity. Luce
+and Vega also have a runtime ConfigMap so non-secret channel configuration is
+kept out of the Secret:
 
 ```sh
 kubectl create namespace agent-outfitter-luce
@@ -112,13 +87,17 @@ kubectl create namespace agent-outfitter-luce
 kubectl -n agent-outfitter-luce create secret generic agent-credentials \
   --from-literal=GITHUB_NOTIFY_TOKEN='ghp_replace_with_the_classic_notifications_token' \
   --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_replace_with_the_fine_grained_token' \
-  --from-literal=GITHUB_USER='luce-unsup' \
-  --from-literal=GITHUB_NOTIFY_ORGS='ai-outfitter'
+  --from-literal=GITHUB_USER='luce-unsup'
+
+kubectl -n agent-outfitter-luce create configmap luce-runtime \
+  --from-literal=OUTFITTER_CHANNELS=github \
+  --from-literal=GITHUB_NOTIFY_FILTERS=mention,assigned_issue,assigned_pr,review_requested,author \
+  --from-literal=GITHUB_NOTIFY_POLL_MS=60000 \
+  --from-literal=GITHUB_NOTIFY_ORGS=ai-outfitter
 ```
 
-Repeat for `agent-outfitter-vega` with `vega-unsup`, and for
-`agent-outfitter-outfitter-bot` with its dedicated account and no
-`GITHUB_NOTIFY_ORGS` key.
+Repeat for `agent-outfitter-vega` with `vega-unsup` and `vega-runtime`.
+`outfitter-bot` uses its dedicated account and needs no organization filter.
 
 Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
 `unset HISTFILE` first, so tokens do not land in shell history. Verify the
@@ -148,7 +127,8 @@ For each agent (`outfitter-luce`, `outfitter-vega`,
 1. Create the namespace `agent-<agent-name>` (the operator also creates it on
    first apply via the Agent's owner reference, but creating it first lets
    the Secret exist before the first deploy).
-2. Create `secret/agent-credentials` with the keys in the table above.
+2. Create `secret/agent-credentials` with the keys in the table above. Do not
+   add `OPENAI_API_KEY` or a directly managed `SPARK_AUTHORIZATION`.
 3. Create `secret/ghcr-pull` and patch the `agent-runtime` ServiceAccount with
    it, if the pinned runtime image is private:
 
@@ -168,45 +148,6 @@ For each agent (`outfitter-luce`, `outfitter-vega`,
    answers (Luce, outfitter-bot) or posts a `COMMENT`/`REQUEST_CHANGES`
    review (Vega) — never a push to `main`, never an `APPROVE`.
 
-## Migration: cutover from Unsupervisedcom/.agents
-
-The live CRs `luce-ai-outfitter` and `outfitter-bot` were deployed by
-`Unsupervisedcom/.agents`'s catalog CI until this change — they are guests on
-the shared nonprod cluster, documented in that repository's
-`deploy/README.md` § "ai-outfitter org". This catalog's own CI now owns the
-ai-outfitter agents.
-
-Cutover, in order:
-
-1. Complete steps 1–5 above so the new-name Agents (`outfitter-luce`,
-   `outfitter-vega`, `outfitter-outfitter-bot`) exist and are `Ready`,
-   running side by side with the old CRs.
-2. Move or recreate secrets in the new namespaces rather than reusing the
-   old ones directly:
-   - `luce-ai-outfitter`'s `agent-credentials` (Luce's two GitHub tokens,
-     `GITHUB_USER=luce-unsup`) → `agent-outfitter-luce`'s
-     `agent-credentials`, plus the new `GITHUB_NOTIFY_ORGS` key.
-   - `outfitter-bot`'s `outfitter-bot-forge-auth` (`GITHUB_USER`,
-     `GITHUB_PERSONAL_ACCESS_TOKEN`) and `outfitter-bot-runtime`
-     (`GIT_ASKPASS`, `GIT_TERMINAL_PROMPT`) ConfigMap →
-     `agent-outfitter-outfitter-bot`'s single `agent-credentials` Secret.
-     This catalog's `git-https-credential` setup step replaces the old
-     `GIT_ASKPASS`/`GIT_TERMINAL_PROMPT` ConfigMap entirely — it derives the
-     askpass helper from `GITHUB_USER` and
-     `GITHUB_PERSONAL_ACCESS_TOKEN` directly, so neither ConfigMap key is
-     needed in the new namespace.
-   - Vega has no predecessor to migrate from; it is new in this change.
-3. Verify the new Agents: resolved revision matches, logs name the expected
-   account, and one real wake produces the expected write (a comment or PR
-   for Luce/outfitter-bot, a `COMMENT`/`REQUEST_CHANGES` review for Vega).
-4. Delete the old CRs **last**: `Agent/luce-ai-outfitter` and
-   `Agent/outfitter-bot` in `Unsupervisedcom/.agents`'s `clusters.yaml`, then
-   let that repository's next deploy remove them, or delete directly with an
-   administrator kubeconfig. `Agent` is cluster-scoped and owns its
-   namespace by owner reference — deleting it **cascades the old namespace**,
-   including its Secrets and workspace PVC. Do this only after step 3 passes;
-   there is no way back once it cascades.
-
 ## Failure modes worth recognising
 
 - **`AssumeRoleWithWebIdentity` fails** — the OIDC subject changed. Renaming
@@ -217,9 +158,6 @@ Cutover, in order:
   surface.
 - **Agent never converges** — `Ready` is true but the resolved revision is
   not ours, meaning the pod is still serving the previous profile.
-- **Deploy fails "manifest declares an Agent name that does not match"** —
-  the pinned action SHA predates `__ORG__` rendering (see the Dependency
-  section above); repin to a SHA that includes it.
 - **Starts cleanly, never wakes** — token wrong or expired, filters exclude
   the reason, or the account is not assignable on that repository. None of
   these produces an error or a stack trace; treat token-expiry mail as an
