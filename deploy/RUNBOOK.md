@@ -18,10 +18,17 @@ Trust policy condition:
 {
   "StringEquals": {
     "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-    "token.actions.githubusercontent.com:sub": "repo:ai-outfitter/.agents:ref:refs/heads/main"
+    "token.actions.githubusercontent.com:sub": [
+      "repo:ai-outfitter/.agents:ref:refs/heads/main",
+      "repo:ai-outfitter@294932028/.agents@1296989777:ref:refs/heads/main"
+    ]
   }
 }
 ```
+
+GitHub currently emits the immutable ID-based subject for this organization.
+Keep the readable subject as migration-safe fallback, but deployment MUST be
+tested against the immutable subject after creating or replacing the role.
 
 The role needs only `eks:DescribeCluster` on the `nonprod` cluster; Kubernetes
 authorization comes from the access entry below, not from IAM.
@@ -115,6 +122,12 @@ Confirm each account is assignable before relying on `assigned_issue` wakes:
 # 204 = assignable; 404 = not a collaborator on that repository.
 gh api -i "/repos/ai-outfitter/<repo>/assignees/<login>" 2>/dev/null | head -1
 ```
+
+Every machine account MUST enable an organization-approved secure 2FA method
+(authenticator app, GitHub Mobile, security key, or passkey). SMS-only or
+missing 2FA causes GitHub to return `403` for repository access even when the
+PAT itself is valid. Verify from the runtime with a read-only request before
+accepting the deployment; `/notifications` returning `200` is insufficient.
 
 Protect `main` on every repository Luce or Vega works, the same way as any
 other deployment of these personas — see the community-profiles catalog's
