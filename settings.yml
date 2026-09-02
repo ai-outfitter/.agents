@@ -12,3 +12,5 @@ default_harness: pi
 sources:
   - github: ai-outfitter/community-profiles
     ref: v1.5.0
+workflows:
+  - founder
