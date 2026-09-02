@@ -58,8 +58,7 @@ ai-outfitter organization.
 ## Resident agents
 
 One persona per organization: this catalog declares a short deployment prefix
-(`organization: outfitter` in `clusters.yaml` — chosen shorter than the
-`ai-outfitter` GitHub login, and to soften the outfitter-bot stutter), and
+(`organization: outfitter` in `clusters.yaml`), and
 every Agent it deploys carries that prefix in its cluster-scoped name
 (`outfitter-luce`, not bare `luce`) so it can never collide with another
 catalog's deployment of a shared persona on the same cluster.
@@ -68,7 +67,6 @@ catalog's deployment of a shared persona on the same cluster.
 | --- | --- | --- |
 | Luce | Prose reviewer and planner — triages a report into a scoped issue, then implements the issues assigned to her | deployed |
 | Vega | Code reviewer — reviews pull requests for correctness, failure modes, and test coverage; never approves or merges | deployed |
-| outfitter-bot | Implementer — works feature-request issues end to end into a pull request | deployed |
 | Drago | Research engineer | planned, not deployed |
 
 Luce and Vega are personas shared across organizations by GitHub account

@@ -39,8 +39,7 @@ rules:
     verbs: ["get", "patch", "update"]
   - apiGroups: ["aioutfitter.com"]
     resources: ["agents"]
-    resourceNames:
-      ["outfitter-luce", "outfitter-vega", "outfitter-outfitter-bot"]
+    resourceNames: ["outfitter-luce", "outfitter-vega"]
     verbs: ["get", "patch", "update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -62,7 +61,7 @@ subjects:
 # "cannot list deployments". `list`, not `patch`: the operator owns these
 # Deployments. CI observes the rollout it caused; it never forces one. Each
 # namespace holds only its own agent's runtime. YAML anchors do not cross
-# document boundaries, so the three pairs are spelled out.
+# document boundaries, so the two pairs are spelled out.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -114,36 +113,6 @@ kind: RoleBinding
 metadata:
   name: ai-outfitter-catalog-deploy
   namespace: agent-outfitter-vega
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: ai-outfitter-catalog-deploy
-subjects:
-  - apiGroup: rbac.authorization.k8s.io
-    kind: Group
-    name: ai-outfitter-catalog-deploy
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: ai-outfitter-catalog-deploy
-  namespace: agent-outfitter-outfitter-bot
-rules:
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["apps"]
-    resources: ["replicasets"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list", "watch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: ai-outfitter-catalog-deploy
-  namespace: agent-outfitter-outfitter-bot
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
