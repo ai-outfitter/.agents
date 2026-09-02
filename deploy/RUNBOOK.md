@@ -1,7 +1,7 @@
 # Deploying the ai-outfitter fleet
 
-`clusters.yaml` names three agents on the `nonprod` cluster: `luce`, `vega`,
-`outfitter-bot`. `.github/workflows/deploy.yml` assumes a dedicated IAM role
+`clusters.yaml` names two agents on the `nonprod` cluster: `luce` and `vega`.
+`.github/workflows/deploy.yml` assumes a dedicated IAM role
 through GitHub OIDC and runs the `deploy-catalog` action once, deploying
 exactly that set. CI only **moves objects that already exist**; this document
 is what an administrator does once, by hand, before the first deploy of a new
@@ -73,10 +73,6 @@ deployment's.
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`** only, limited to the repositories the agent works |
 | `GITHUB_USER` | — | the machine account's login |
 
-`outfitter-bot` holds a dedicated ai-outfitter-only machine account, not a
-shared persona, so it needs only the first three keys — there is no other
-organization's wake to filter out.
-
 **Why they stay two tokens.** `GET /notifications` accepts classic tokens
 only — a fine-grained PAT and an App installation token are both rejected
 with `403`. Collapsing to one classic token with `repo` would grant write
@@ -104,9 +100,6 @@ kubectl -n agent-outfitter-luce create configmap luce-runtime \
 ```
 
 Repeat for `agent-outfitter-vega` with `vega-unsup` and `vega-runtime`.
-`outfitter-bot` uses its dedicated account and needs no organization filter.
-Create `outfitter-bot-runtime` with the other three channel keys and omit only
-`GITHUB_NOTIFY_ORGS`.
 
 Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
 `unset HISTFILE` first, so tokens do not land in shell history. Verify the
@@ -151,8 +144,7 @@ header consumed by `models.json`. Agent Operator v0.12 inherits it into every
 member Agent as `SPARK_AUTHORIZATION`; never print it or store it in this
 repository.
 
-For each agent (`outfitter-luce`, `outfitter-vega`,
-`outfitter-outfitter-bot`):
+For each agent (`outfitter-luce`, `outfitter-vega`):
 
 1. Create the namespace `agent-<agent-name>` (the operator also creates it on
    first apply via the Agent's owner reference, but creating it first lets
@@ -170,8 +162,8 @@ For each agent (`outfitter-luce`, `outfitter-vega`,
 4. Apply this catalog once (`workflow_dispatch`, or push to `main`), wait for
    `Ready` with the expected resolved revision, then verify: an assigned
    test issue wakes the agent within one poll interval, and it either
-   answers (Luce, outfitter-bot) or posts a `COMMENT`/`REQUEST_CHANGES`
-   review (Vega) — never a push to `main`, never an `APPROVE`.
+   answers (Luce) or posts a `COMMENT`/`REQUEST_CHANGES` review (Vega) —
+   never a push to `main`, never an `APPROVE`.
 
 After reconciliation, each `agent-credentials` Secret MUST contain
 `SPARK_AUTHORIZATION` inherited from the organization and MUST NOT contain

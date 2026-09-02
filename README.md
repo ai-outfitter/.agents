@@ -7,8 +7,6 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   follow across the org's repositories.
 - [`settings.yml`](settings.yml) — org-default Outfitter settings: harness and
   the pinned community-profiles catalog source.
-- [`agents/outfitter-bot`](agents/outfitter-bot/agent.md) — the org's resident
-  agent: works issues assigned to it into reviewed pull requests.
 - [`agents/luce-ai-outfitter`](agents/luce-ai-outfitter/agent.md) — the org's
   resident agent: inherits the canonical `luce` profile from the pinned
   community catalog, then adds this organization's triage and implementation
@@ -24,10 +22,10 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
 ## Deploying this org's agents
 
 `clusters.yaml`, `.github/workflows/deploy.yml`, and `deploy/` are this
-catalog's own CI/CD: a push to `main` deploys Luce, Vega, and outfitter-bot to
+catalog's own CI/CD: a push to `main` deploys Luce and Vega to
 this organization's nonprod cluster. Each renders with this catalog's
-deployment prefix (`outfitter`) — `outfitter-luce`, `outfitter-vega`,
-`outfitter-outfitter-bot` — never a shared object with another catalog's
+deployment prefix (`outfitter`) — `outfitter-luce` and `outfitter-vega` —
+never a shared object with another catalog's
 deployment of the same persona. See [`deploy/RUNBOOK.md`](deploy/RUNBOOK.md)
 for administrator bootstrap.
 
