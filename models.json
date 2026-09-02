@@ -5,7 +5,8 @@
       "api": "openai-completions",
       "apiKey": "$SPARK_AUTHORIZATION",
       "headers": {
-        "Authorization": "$SPARK_AUTHORIZATION"
+        "Authorization": "$SPARK_AUTHORIZATION",
+        "User-Agent": "ai-outfitter/${AGENT_NAME}"
       },
       "compat": {
         "supportsDeveloperRole": false,
