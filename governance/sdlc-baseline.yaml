@@ -28,7 +28,12 @@ rules:
       # Luce implements the issues assigned to her, so she pushes a feature
       # branch and opens a pull request. `push-protected` stays denied: the
       # branch is how work leaves her, and the pull request is how it lands.
-      may: [open-issue, comment, assign, push-branch, open-pr, request-review]
+      may: [open-issue, comment, assign, push-branch, open-pr, request-review, review]
+      may-not: [merge, push-protected]
+    vega:
+      # Vega is an independent reviewer. A clean formal approval satisfies
+      # the review gate, but Vega never authors or lands the change.
+      may: [comment, review]
       may-not: [merge, push-protected]
   teams:
     reviewers:

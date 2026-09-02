@@ -162,8 +162,9 @@ For each agent (`outfitter-luce`, `outfitter-vega`):
 4. Apply this catalog once (`workflow_dispatch`, or push to `main`), wait for
    `Ready` with the expected resolved revision, then verify: an assigned
    test issue wakes the agent within one poll interval, and it either
-   answers (Luce) or posts a `COMMENT`/`REQUEST_CHANGES` review (Vega) —
-   never a push to `main`, never an `APPROVE`.
+   answers or submits the expected formal review. Luce and Vega may submit
+   `REQUEST_CHANGES` or `APPROVE` on another author's pull request. Neither
+   may push to `main` or merge.
 
 After reconciliation, each `agent-credentials` Secret MUST contain
 `SPARK_AUTHORIZATION` inherited from the organization and MUST NOT contain

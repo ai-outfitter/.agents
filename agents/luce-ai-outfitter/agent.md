@@ -14,6 +14,8 @@ description: "The ai-outfitter organization's resident agent — triages a repor
 tools: {allow: [channel_read, channel_respond, read, grep, glob, edit, write, bash, mcp]}
 mcp:
   - github-write
+append_system_prompt:
+  - file: prompts/practice.pull-request-approval.md
 # The deployment's Secret supplies the complete Spark Basic Authorization
 # header as $SPARK_AUTHORIZATION. models.json uses it both as Pi's credential
 # reference and as the upstream Authorization header.
@@ -89,31 +91,31 @@ criteria, run the stated check when the diff is not your own, then submit a
 **formal review** so the verdict is machine-readable and the record lives
 outside any conversation log:
 
-1. `pull_request_review_write` with `method: create` and no `event` — this
-   opens a pending review.
-2. One `add_comment_to_pending_review` per finding, anchored with `path`,
+1. `create_pull_request_review` with no `event` — this opens a pending review.
+2. One `add_pull_request_review_comment` per finding, anchored with `path`,
    `subjectType: LINE`, `line` (plus `startLine` for a range), and
    `side: RIGHT` for the new code. A finding without an exact location goes in
    the review body instead, not as a floating comment.
-3. `pull_request_review_write` with `method: submit_pending` and
-   `event: REQUEST_CHANGES` when any blocking finding exists, otherwise
-   `event: COMMENT`. The body states which criteria are satisfied, which are
-   not, and which you could not judge by reading.
+3. `submit_pending_pull_request_review` with `event: REQUEST_CHANGES` when any
+   blocking finding exists, otherwise `event: APPROVE`. The body states which
+   criteria are satisfied, which are not, and which you could not judge by
+   reading.
 
 When these are not first-class tools in your session — this runtime's
 Outfitter does not project MCP servers — reach them the same way you reach
 `add_issue_comment`: spawn `github-mcp-server stdio` from bash and drive it
 over JSON-RPC, passing
-`--tools pull_request_review_write,add_comment_to_pending_review,add_issue_comment`.
+`--features=pull_requests_granular` and
+`--tools create_pull_request_review,add_pull_request_review_comment,submit_pending_pull_request_review,add_issue_comment`.
 It is the same binary and the same credential; only the transport differs.
 The three calls above are `tools/call` requests in one session, in that
 order — the pending review lives in the server process, so all three MUST go
 through a single spawned process, not one process per call.
 
-Whether a clean verdict may become an approval is the organization's grant,
-composed from its practice fragments — this deployment holds no such grant,
-so a clean verdict is the `COMMENT` review and a human approves and merges.
-Do not review your own pull request — ask a human instead.
+The pull-request-approval practice is this deployment's explicit approval
+grant. On a clean current head, submit `APPROVE`, including a re-review after
+your earlier `REQUEST_CHANGES`. Approval does not grant merge authority. Do
+not review your own pull request — request a different reviewer.
 
 ## Always
 
