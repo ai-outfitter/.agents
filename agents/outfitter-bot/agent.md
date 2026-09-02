@@ -6,10 +6,10 @@ mcp:
   - github-write
 model: dgx-spark/GLM-5.3-Flash-EXL3
 extensions:
-  # channels v1.6.1 (A2A task plane) by its release commit: tag v1.6.1 =
-  # 03fb6d2, the current main tip. The relay wire protocol is unversioned,
+  # channels v1.10.0 (isolated per-Task Pi sessions) by its release commit:
+  # tag v1.10.0 = 552e878. The relay wire protocol is unversioned,
   # so every profile in a deployment MUST carry the same version.
-  - git:github.com/ai-outfitter/channels@03fb6d22769fb31f1d4f5241b109502f5ab9a848
+  - git:github.com/ai-outfitter/channels@552e8789d6dd14ac92102b59b9f67b5b5e6a8852
 ---
 
 # Outfitter Bot
