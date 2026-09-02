@@ -70,7 +70,7 @@ deployment's.
 | Variable | Kind | Scope |
 | --- | --- | --- |
 | `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
-| `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`** only, limited to the repositories the agent works |
+| `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`** only; selected repositories; Contents, Issues, and Pull requests read/write; Metadata read |
 | `GITHUB_USER` | — | the machine account's login |
 
 **Why they stay two tokens.** `GET /notifications` accepts classic tokens
@@ -80,9 +80,9 @@ access to code, collaborators, and webhooks on every repository the shared
 account can reach, in every organization it belongs to — classic scopes have
 no organization selector.
 
-Each agent has one `agent-credentials` Secret for its GitHub identity. Luce
-and Vega also have a runtime ConfigMap so non-secret channel configuration is
-kept out of the Secret:
+Each agent has one `agent-credentials` Secret for its GitHub identity. The
+Agent resource carries channel selection, organization filtering, polling, and
+event filters through the operator's typed `channels` and `github` fields:
 
 ```sh
 kubectl create namespace agent-outfitter-luce
@@ -92,14 +92,9 @@ kubectl -n agent-outfitter-luce create secret generic agent-credentials \
   --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_replace_with_the_fine_grained_token' \
   --from-literal=GITHUB_USER='luce-unsup'
 
-kubectl -n agent-outfitter-luce create configmap luce-runtime \
-  --from-literal=OUTFITTER_CHANNELS=github \
-  --from-literal=GITHUB_NOTIFY_FILTERS=mention,assigned_issue,assigned_pr,review_requested,author \
-  --from-literal=GITHUB_NOTIFY_POLL_MS=60000 \
-  --from-literal=GITHUB_NOTIFY_ORGS=ai-outfitter
 ```
 
-Repeat for `agent-outfitter-vega` with `vega-unsup` and `vega-runtime`.
+Repeat for `agent-outfitter-vega` with `vega-unsup`.
 
 Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
 `unset HISTFILE` first, so tokens do not land in shell history. Verify the
@@ -135,8 +130,9 @@ exist with `kubectl explain organizations.spec.credentialSecretName` and
 
 Every Agent pins the same version-tagged organization runtime. It carries
 Outfitter 1.13.0 and `github-mcp-server`; do not use the moving `latest` tag or
-fall back to the operator's stock image. The setup step writes Outfitter's
-versioned source-state manifests for the exact catalog revisions it fetches.
+fall back to the operator's stock image. Managed catalog sync writes
+Outfitter's versioned source-state manifests for the exact revisions it
+fetches before the resident runtime starts.
 
 Create `secret/organization-credentials` once in namespace `org-outfitter`
 with `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
@@ -159,15 +155,16 @@ For each agent (`outfitter-luce`, `outfitter-vega`):
      -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
    ```
 
-4. Apply this catalog once (`workflow_dispatch`, or push to `main`), wait for
-   `Ready` with the expected resolved revision, then verify: an assigned
-   test issue wakes the agent within one poll interval, and it either
-   answers (Luce) or posts a `COMMENT`/`REQUEST_CHANGES` review (Vega) —
-   never a push to `main`, never an `APPROVE`.
+4. Apply this catalog once (`workflow_dispatch`, or push to `main`).
+   `catalogSync.enabled` runs managed `outfitter sync` before the resident
+   runtime. Wait for `Ready` with the expected resolved revision, then assign
+   one test issue and request one cross-resident review. The author produces a
+   tested pull request, the other resident submits `REQUEST_CHANGES` or
+   `APPROVE`, and a maintainer owns merge.
 
 After reconciliation, each `agent-credentials` Secret MUST contain
-`SPARK_AUTHORIZATION` inherited from the organization and MUST NOT contain
-`OPENAI_API_KEY`, `GITHUB_NOTIFY_ORGS`, or `OUTFITTER_CHANNELS`.
+`SPARK_AUTHORIZATION` inherited from the organization. Channel configuration
+MUST resolve from the typed Agent fields.
 
 ## Failure modes worth recognising
 

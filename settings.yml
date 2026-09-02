@@ -11,4 +11,4 @@
 default_harness: pi
 sources:
   - github: ai-outfitter/community-profiles
-    ref: v1.5.0
+    ref: 7a1c7166a51b98f7b94d6684a5e37c5cba6fec53

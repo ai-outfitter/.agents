@@ -1,5 +1,18 @@
 {
   "providers": {
+    "openai": {
+      "baseUrl": "https://api.openai.com/v1",
+      "api": "openai-completions",
+      "apiKey": "$OPENAI_API_KEY",
+      "authHeader": true,
+      "models": [
+        {
+          "id": "gpt-5.6-sol",
+          "name": "GPT-5.6 Sol (OpenAI)",
+          "reasoning": true
+        }
+      ]
+    },
     "dgx-spark": {
       "baseUrl": "https://spark.ncrmro.com/v1",
       "api": "openai-completions",
