@@ -9,6 +9,9 @@
 # scoped to `skills: [issue-triage]`, which is what a triage workflow should
 # resolve.
 default_harness: pi
+harness_defaults:
+  pi:
+    httpIdleTimeoutMs: 3600000
 sources:
   - github: ai-outfitter/community-profiles
     ref: v1.5.0
