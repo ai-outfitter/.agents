@@ -5,26 +5,5 @@
     "outputGuard": true,
     "sampling": false
   },
-  "mcpServers": {
-    "github": {
-      "command": "github-mcp-server",
-      "args": [
-        "stdio",
-        "--tools",
-        "get_me,search_issues,search_pull_requests,issue_read,pull_request_read,get_file_contents,add_issue_comment"
-      ],
-      "lifecycle": "keep-alive",
-      "requestTimeoutMs": 30000
-    },
-    "github-write": {
-      "command": "github-mcp-server",
-      "args": [
-        "stdio",
-        "--tools",
-        "get_me,issue_read,search_issues,get_file_contents,add_issue_comment,list_pull_requests,create_pull_request,pull_request_read,pull_request_review_write,add_comment_to_pending_review,add_reply_to_pull_request_comment"
-      ],
-      "lifecycle": "keep-alive",
-      "requestTimeoutMs": 30000
-    }
-  }
+  "mcpServers": {}
 }
