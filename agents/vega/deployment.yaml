@@ -20,49 +20,43 @@ spec:
   memberships:
     - organization: __ORG__
   profile:
-    agent: vega
+    agent: vega-ai-outfitter
     harness: pi
   credentialSecretName: agent-credentials
-  image: ghcr.io/unsupervisedcom/nonprod-bot-agent:6f08c52-r33429105296
-  envFrom:
-    - configMapRef:
-        name: vega-runtime
+  image: ghcr.io/ai-outfitter/outfitter:1.15.0
+  catalogSync:
+    enabled: true
+  forge:
+    username: vega-unsup
+  channels: [github]
+  github:
+    notifyOrgs: [ai-outfitter]
+    pollMs: 60000
+    filters: [mention, assigned_issue, assigned_pr, review_requested, author]
   setup:
-    - name: catalog-bootstrap
+    - name: git-https-credential
       script: |
         set -eu
-        source_uri="git+https://github.com/ai-outfitter/.agents.git"
-        repository="${source_uri#git+}"
-        revision="__REVISION__"
-        profile="vega"
-        cache_key="$(
-          printf '%s#%s' "$source_uri" "$revision" \
-            | base64 -w0 | tr '+/' '-_' | tr -d '='
-        )"
-        catalog="/workspace/.agents-cache/repos/$cache_key"
-        temporary="${catalog}.tmp.$$"
-        stale="${catalog}.stale.$$"
-        trap 'rm -rf "$temporary" "$stale"' EXIT
+        umask 077
 
-        rm -rf "$temporary"
-        mkdir -p "$temporary"
-        git -C "$temporary" init --quiet
-        git -C "$temporary" remote add origin "$repository"
-        git -C "$temporary" fetch --quiet --depth 1 origin "$revision"
-        git -C "$temporary" checkout --quiet --detach FETCH_HEAD
-        test "$(git -C "$temporary" rev-parse HEAD)" = "$revision"
-        test -f "$temporary/agents/$profile/agent.md"
-        test -f "$temporary/mcp.json"
+        : "${GITHUB_PERSONAL_ACCESS_TOKEN:?agent-credentials must provide GITHUB_PERSONAL_ACCESS_TOKEN}"
+        : "${GITHUB_USER:?agent-credentials must provide GITHUB_USER}"
 
-        if [ -e "$catalog" ]; then
-          mv "$catalog" "$stale"
-        fi
-        mv "$temporary" "$catalog"
-        state_directory="/workspace/.agents-cache/source-state"
-        mkdir -p "$state_directory"
-        printf '%s\n' "{\"version\":1,\"source\":\"$source_uri\",\"requestedRef\":\"$revision\",\"resolvedCommit\":\"$revision\",\"cacheKey\":\"$cache_key\"}" > "$state_directory/$cache_key.json"
-        chmod 0600 "$state_directory/$cache_key.json"
-        rm -rf "$stale"
+        askpass="${HOME}/.git-askpass"
+        cat >"$askpass" <<'ASKPASS'
+        #!/bin/sh
+        case "$1" in
+          *[Uu]sername*) printf '%s\n' "$GITHUB_USER" ;;
+          *[Pp]assword*) printf '%s\n' "$GITHUB_PERSONAL_ACCESS_TOKEN" ;;
+          *) exit 1 ;;
+        esac
+        ASKPASS
+        chmod 0700 "$askpass"
+
+        git config --global core.askPass "$askpass"
+        git config --global credential.helper ''
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "${GITHUB_USER}@users.noreply.github.com"
   workspace:
     resourceQuota:
       hard:
