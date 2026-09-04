@@ -65,9 +65,14 @@ catalog's deployment of a shared persona on the same cluster.
 
 | Agent | Role | State |
 | --- | --- | --- |
-| Luce | Prose reviewer and planner — triages a report into a scoped issue, then implements the issues assigned to her | deployed |
-| Vega | Code reviewer — reviews pull requests for correctness, failure modes, and test coverage; never approves or merges | deployed |
+| Luce | Resident engineer with planning, prose, and requirements-review emphasis | deployed |
+| Vega | Resident engineer with correctness, failure-mode, and test-review emphasis | deployed |
 | Drago | Research engineer | planned, not deployed |
+
+Both residents implement assigned issues through pull requests and
+independently review the other author's current head. The author owns the
+feature branch, the reviewer owns `REQUEST_CHANGES` or `APPROVE`, and a
+maintainer owns merge.
 
 Luce and Vega are personas shared across organizations by GitHub account
 (`luce-unsup`, `vega-unsup`), but never by credential: each deployment holds
