@@ -84,10 +84,10 @@ jobs:
           aws eks update-kubeconfig --name nonprod --region us-east-1
 
       # Prefer the published component release tag for this organization-owned
-      # action. agent-operator-v0.14.0 carries the workflow task-plane,
-      # layered catalog, and credential APIs used by these manifests.
+      # action. agent-operator-v0.15.0 carries the workflow task-plane,
+      # layered catalog, credential, and deployment-model APIs used here.
       - name: Deploy the nonprod cluster
-        uses: ai-outfitter/agent-operator/actions/deploy-catalog@agent-operator-v0.14.0
+        uses: ai-outfitter/agent-operator/actions/deploy-catalog@agent-operator-v0.15.0
         with:
           cluster: nonprod
           revision: ${{ github.sha }}

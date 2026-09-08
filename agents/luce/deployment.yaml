@@ -13,7 +13,8 @@ spec:
       revision: __REVISION__
     - name: community-profiles
       github: ai-outfitter/community-profiles
-      revision: d074c3318b51a4a7c0eb10ecef315ff263769a8a
+      # v1.9.1 release commit; AgentCatalog requires an immutable full SHA.
+      revision: 92aa501b054d4d6dc727dfb2d614ff9e76f7eead
 ---
 apiVersion: aioutfitter.com/v1alpha1
 kind: Agent
@@ -25,6 +26,7 @@ spec:
   profile:
     agent: luce
     harness: pi
+    model: dgx-spark/GLM-5.3-Flash-EXL3
   credentialSecretName: agent-credentials
   image: ghcr.io/ai-outfitter/outfitter:1.16.0
   catalogSync:

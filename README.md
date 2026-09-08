@@ -10,9 +10,9 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
 - `luce` and `vega` come directly from the exact pinned
   [community-profiles](https://github.com/ai-outfitter/community-profiles)
   revision. This catalog does not fork or rename either persona.
-- [`settings.yml`](settings.yml) supplies the organization runtime without a
-  persona fork: model, Channels, hosted GitHub access, and AI Outfitter
-  context compose into the selected community profile as catalog defaults.
+- The community profiles supply Channels, task-plane tools, and hosted GitHub
+  access. Each deployment selects its organization-owned model through the
+  Agent profile without forking or renaming the persona.
 - Drago (research engineer) is planned but not yet deployed.
 - More shared contributor agents and skills land here as they emerge; broader
   catalogs live in
