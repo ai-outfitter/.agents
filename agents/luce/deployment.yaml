@@ -11,10 +11,6 @@ spec:
     - name: ai-outfitter-agents
       github: ai-outfitter/.agents
       revision: __REVISION__
-    - name: community-profiles
-      github: ai-outfitter/community-profiles
-      # v1.9.1 release commit; AgentCatalog requires an immutable full SHA.
-      revision: 92aa501b054d4d6dc727dfb2d614ff9e76f7eead
 ---
 apiVersion: aioutfitter.com/v1alpha1
 kind: Agent
