@@ -11,6 +11,9 @@ spec:
     - name: ai-outfitter-agents
       github: ai-outfitter/.agents
       revision: __REVISION__
+    - name: community-profiles
+      github: ai-outfitter/community-profiles
+      revision: 0bea9d16b103972a6612a9542b46f9ee096064cd
 ---
 apiVersion: aioutfitter.com/v1alpha1
 kind: Agent
