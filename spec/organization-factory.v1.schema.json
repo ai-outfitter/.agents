@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ai-outfitter/.agents/blob/main/spec/organization-factory.v1.schema.json",
+  "title": "organization-factory/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "organization", "coordinator", "agents", "gates"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "kind": { "const": "organization-factory/v1" },
+    "organization": { "$ref": "#/$defs/slug" },
+    "coordinator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["app", "triager", "mergeActor"],
+      "properties": {
+        "app": { "$ref": "#/$defs/slug" },
+        "triager": { "$ref": "#/$defs/slug" },
+        "mergeActor": { "const": "github" }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "minProperties": 2,
+      "propertyNames": { "$ref": "#/$defs/slug" },
+      "additionalProperties": { "$ref": "#/$defs/agent" }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["independentReview", "reviewMustMatchHead", "requiredChecks", "maintainerApproval", "onUnroutable"],
+      "properties": {
+        "independentReview": { "const": true },
+        "reviewMustMatchHead": { "const": true },
+        "maintainerApproval": { "const": true },
+        "requiredChecks": { "const": true },
+        "onUnroutable": { "const": "needs-human" }
+      }
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "state", "routable", "capabilities", "specialties"],
+      "properties": {
+        "profile": { "$ref": "#/$defs/slug" },
+        "login": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 39,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "state": { "enum": ["deployed", "planned"] },
+        "routable": { "type": "boolean" },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": { "enum": ["triage", "implement", "review", "research"] }
+        },
+        "specialties": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/slug" }
+        },
+        "reviewerFallback": { "$ref": "#/$defs/slug" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "routable": { "const": true } }, "required": ["routable"] },
+          "then": {
+            "properties": { "state": { "const": "deployed" } },
+            "required": ["login", "reviewerFallback"]
+          }
+        },
+        {
+          "if": { "properties": { "state": { "const": "planned" } }, "required": ["state"] },
+          "then": { "properties": { "routable": { "const": false } } }
+        }
+      ]
+    }
+  }
+}
