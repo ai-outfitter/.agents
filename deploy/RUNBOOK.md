@@ -72,6 +72,7 @@ deployment's.
 | `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
 | `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`** only; selected repositories; Contents, Issues, and Pull requests read/write; Metadata read |
 | `GITHUB_USER` | — | the machine account's login |
+| `a2a-credentials.json` | random bearer document | Panopticon intake for this Agent only |
 
 **Why they stay two tokens.** `GET /notifications` accepts classic tokens
 only — a fine-grained PAT and an App installation token are both rejected
@@ -90,7 +91,8 @@ kubectl create namespace agent-outfitter-luce
 kubectl -n agent-outfitter-luce create secret generic agent-credentials \
   --from-literal=GITHUB_NOTIFY_TOKEN='ghp_replace_with_the_classic_notifications_token' \
   --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_replace_with_the_fine_grained_token' \
-  --from-literal=GITHUB_USER='luce-unsup'
+  --from-literal=GITHUB_USER='luce-unsup' \
+  --from-file=a2a-credentials.json=/secure/path/outfitter-luce-a2a.json
 
 ```
 
@@ -124,12 +126,11 @@ forge, not by the token or the profile.
 
 ## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
 
-Install Agent Operator v0.12 before applying this catalog. Confirm both fields
-exist with `kubectl explain organizations.spec.credentialSecretName` and
-`kubectl explain agents.spec.credentialSecretName`.
+Install Agent Operator v0.13 before applying this catalog. Confirm the task
+plane field exists with `kubectl explain agents.spec.taskPlane.workflow`.
 
 Every Agent pins the same version-tagged public runtime,
-`ghcr.io/ai-outfitter/outfitter:1.15.0`. GitHub is reached through the hosted
+`ghcr.io/ai-outfitter/outfitter:1.16.0`. GitHub is reached through the hosted
 MCP endpoint (`github-hosted`), so the image needs no `github-mcp-server`. Do
 not use the moving `latest` tag or fall back to the operator's stock image. Managed catalog sync writes
 Outfitter's versioned source-state manifests for the exact revisions it
@@ -137,7 +138,7 @@ fetches before the resident runtime starts.
 
 Create `secret/organization-credentials` once in namespace `org-outfitter`
 with `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
-header consumed by `models.json`. Agent Operator v0.12 inherits it into every
+header consumed by `models.json`. Agent Operator v0.13 inherits it into every
 member Agent as `SPARK_AUTHORIZATION`; never print it or store it in this
 repository.
 
@@ -146,26 +147,22 @@ For each agent (`outfitter-luce`, `outfitter-vega`):
 1. Create the namespace `agent-<agent-name>` (the operator also creates it on
    first apply via the Agent's owner reference, but creating it first lets
    the Secret exist before the first deploy).
-2. Create `secret/agent-credentials` with the keys in the table above. Do not
+2. Create `secret/agent-credentials` with the keys in the table above. The A2A
+   document is `{"credentials":[{"token":"<random>","principal":"panopticon"}]}`.
+   Give Panopticon the same bearer through its private credential store. Do not
    add `OPENAI_API_KEY` or a directly managed `SPARK_AUTHORIZATION`.
-3. Create `secret/ghcr-pull` and patch the `agent-runtime` ServiceAccount with
-   it because the runtime image is private:
-
-   ```sh
-   kubectl -n agent-<agent-name> patch serviceaccount agent-runtime \
-     -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
-   ```
-
-4. Apply this catalog once (`workflow_dispatch`, or push to `main`).
+3. Apply this catalog once (`workflow_dispatch`, or push to `main`).
    `catalogSync.enabled` runs managed `outfitter sync` before the resident
-   runtime. Wait for `Ready` with the expected resolved revision, then assign
+   runtime, and `taskPlane.workflow` strictly exports `software-factory` before
+   startup. Wait for `Ready` with the expected resolved revision, then assign
    one test issue and request one cross-resident review. The author produces a
    tested pull request, the other resident submits `REQUEST_CHANGES` or
    `APPROVE`, and a maintainer owns merge.
 
 After reconciliation, each `agent-credentials` Secret MUST contain
-`SPARK_AUTHORIZATION` inherited from the organization. Channel configuration
-MUST resolve from the typed Agent fields.
+`SPARK_AUTHORIZATION` inherited from the organization and the administrator
+supplied `a2a-credentials.json`. Channel configuration MUST resolve from the
+typed Agent fields.
 
 ## Failure modes worth recognising
 

@@ -6,14 +6,14 @@ inherits: [engineer, environment.agent-operator-pod]
 # The github channel source delivers no message body and no adapter, so
 # channel_read throws for a GitHub wake; the file and shell tools are what
 # make a wake actionable.
-tools: {allow: [channel_read, channel_respond, read, grep, glob, edit, write, bash, mcp]}
+tools: {allow: [channel_read, channel_respond, a2a_read_task, a2a_complete_task, a2a_record_output, a2a_require_input, read, grep, glob, edit, write, bash, mcp]}
 mcp:
   - github-hosted
 append_system_prompt:
   - file: prompts/context.ai-outfitter-resident.md
 model: dgx-spark/GLM-5.3-Flash-EXL3
 extensions:
-  - npm:@ai-outfitter/channels@1.10.0
+  - npm:@ai-outfitter/channels@1.11.1
 ---
 
 # Vega

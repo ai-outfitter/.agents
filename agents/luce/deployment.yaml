@@ -23,9 +23,11 @@ spec:
     agent: luce-ai-outfitter
     harness: pi
   credentialSecretName: agent-credentials
-  image: ghcr.io/ai-outfitter/outfitter:1.15.0
+  image: ghcr.io/ai-outfitter/outfitter:1.16.0
   catalogSync:
     enabled: true
+  taskPlane:
+    workflow: software-factory
   forge:
     username: luce-unsup
   channels: [github]

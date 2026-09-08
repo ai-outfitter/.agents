@@ -9,6 +9,7 @@
 # scoped to `skills: [issue-triage]`, which is what a triage workflow should
 # resolve.
 default_harness: pi
+workflows: [software-factory]
 sources:
   - github: ai-outfitter/community-profiles
-    ref: v1.8.0
+    ref: v1.9.0
