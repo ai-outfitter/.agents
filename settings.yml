@@ -10,6 +10,16 @@
 # resolve.
 default_harness: pi
 workflows: [software-factory]
+agent_defaults:
+  extensions:
+    - npm:@ai-outfitter/channels@1.11.1
+  append_system_prompt:
+    - file: prompts/context.ai-outfitter-resident.md
+harness_defaults:
+  pi:
+    model: dgx-spark/GLM-5.3-Flash-EXL3
 sources:
   - github: ai-outfitter/community-profiles
-    ref: v1.9.0
+    # Exact reviewed head of community-profiles PR #65. Replace with its
+    # release tag after it lands; the SHA keeps deployment and policy in sync.
+    ref: d074c3318b51a4a7c0eb10ecef315ff263769a8a

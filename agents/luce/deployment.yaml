@@ -13,7 +13,7 @@ spec:
       revision: __REVISION__
     - name: community-profiles
       github: ai-outfitter/community-profiles
-      revision: 0bea9d16b103972a6612a9542b46f9ee096064cd
+      revision: d074c3318b51a4a7c0eb10ecef315ff263769a8a
 ---
 apiVersion: aioutfitter.com/v1alpha1
 kind: Agent
@@ -23,7 +23,7 @@ spec:
   memberships:
     - organization: __ORG__
   profile:
-    agent: luce-ai-outfitter
+    agent: luce
     harness: pi
   credentialSecretName: agent-credentials
   image: ghcr.io/ai-outfitter/outfitter:1.16.0

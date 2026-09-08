@@ -9,7 +9,7 @@
   },
   "agents": {
     "luce": {
-      "profile": "luce-ai-outfitter",
+      "profile": "luce",
       "login": "luce-unsup",
       "state": "deployed",
       "routable": true,
@@ -18,7 +18,7 @@
       "reviewerFallback": "vega"
     },
     "vega": {
-      "profile": "vega-ai-outfitter",
+      "profile": "vega",
       "login": "vega-unsup",
       "state": "deployed",
       "routable": true,
