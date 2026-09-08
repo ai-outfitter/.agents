@@ -1,0 +1,44 @@
+{
+  "$schema": "../spec/organization-factory.v1.schema.json",
+  "kind": "organization-factory/v1",
+  "organization": "ai-outfitter",
+  "coordinator": {
+    "app": "ai-outfitter",
+    "triager": "luce",
+    "mergeActor": "github"
+  },
+  "agents": {
+    "luce": {
+      "profile": "luce-ai-outfitter",
+      "login": "luce-unsup",
+      "state": "deployed",
+      "routable": true,
+      "capabilities": ["triage", "implement", "review"],
+      "specialties": ["planning", "requirements", "prose", "general-engineering"],
+      "reviewerFallback": "vega"
+    },
+    "vega": {
+      "profile": "vega-ai-outfitter",
+      "login": "vega-unsup",
+      "state": "deployed",
+      "routable": true,
+      "capabilities": ["implement", "review"],
+      "specialties": ["correctness", "failure-modes", "testing", "general-engineering"],
+      "reviewerFallback": "luce"
+    },
+    "drago": {
+      "profile": "drago",
+      "state": "planned",
+      "routable": false,
+      "capabilities": ["research"],
+      "specialties": ["technical-research"]
+    }
+  },
+  "gates": {
+    "independentReview": true,
+    "reviewMustMatchHead": true,
+    "requiredChecks": true,
+    "maintainerApproval": true,
+    "onUnroutable": "needs-human"
+  }
+}

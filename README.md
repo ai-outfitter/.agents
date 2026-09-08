@@ -18,6 +18,11 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
 - More shared contributor agents and skills land here as they emerge; broader
   catalogs live in
   [community-profiles](https://github.com/ai-outfitter/community-profiles).
+- [`factory/agents.json`](factory/agents.json) is the App-facing routing
+  registry. Only entries marked both `deployed` and `routable` may receive
+  an issue. Each routable implementer names a different deployed reviewer.
+  `bin/validate-factory-policy` checks those invariants against the schema,
+  cluster list, Agent manifests, and governance. Maintainer approval remains a merge gate.
 
 ## Deploying this org's agents
 

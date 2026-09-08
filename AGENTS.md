@@ -15,6 +15,10 @@ ai-outfitter organization.
 
 ## Catalog sources
 
+- For GitHub Actions maintained inside the `ai-outfitter` organization,
+  prefer the published release tag over the release commit SHA. Repositories
+  with component releases use the component tag, such as
+  `agent-operator-v0.14.0`.
 - Every repo in the org other than this catalog MUST declare
   `ai-outfitter/.agents` as its only source.
 - A repo MUST NOT redeclare a source the org catalog already provides. The

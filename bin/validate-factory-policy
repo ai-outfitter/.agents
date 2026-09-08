@@ -1,0 +1,86 @@
+#!/usr/bin/env sh
+set -eu
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+policy="$root/factory/agents.json"
+schema="$root/spec/organization-factory.v1.schema.json"
+
+for command in check-jsonschema jq yq; do
+  command -v "$command" >/dev/null 2>&1 || {
+    echo "factory policy validation requires $command" >&2
+    exit 1
+  }
+done
+
+check-jsonschema --schemafile "$schema" "$policy" >/dev/null
+
+jq -e '
+  .kind == "organization-factory/v1"
+  and (.agents[.coordinator.triager].state == "deployed")
+  and (.agents[.coordinator.triager].routable == true)
+  and (.agents[.coordinator.triager].capabilities | index("triage") != null)
+  and (
+    [
+      .agents as $agents
+      | $agents
+      | to_entries[]
+      | select(.value.routable)
+      | .key as $author
+      | .value as $agent
+      | ($agent.login | type == "string")
+        and ($agent.state == "deployed")
+        and ($agent.capabilities | index("implement") != null)
+        and ($agent.reviewerFallback != $author)
+        and ($agents[$agent.reviewerFallback].routable == true)
+        and ($agents[$agent.reviewerFallback].capabilities | index("review") != null)
+    ]
+    | all
+  )
+  and (
+    [.agents | to_entries[] | select(.value.routable) | .value.login]
+    | length == (unique | length)
+  )
+  and .gates.independentReview
+  and .gates.reviewMustMatchHead
+  and .gates.requiredChecks
+  and .gates.maintainerApproval
+  and (.gates.onUnroutable == "needs-human")
+' "$policy" >/dev/null
+
+cluster_agents="$(yq -o=json '[.clusters[].agents[]] | unique' "$root/clusters.yaml")"
+for agent in $(jq -r '.agents | to_entries[] | select(.value.routable) | .key' "$policy"); do
+  jq -e --arg agent "$agent" --argjson deployed "$cluster_agents" \
+    '$deployed | index($agent) != null' "$policy" >/dev/null
+
+  manifest="$root/agents/$agent/deployment.yaml"
+  [ -f "$manifest" ] || {
+    echo "routable agent $agent has no deployment manifest" >&2
+    exit 1
+  }
+
+  declared_profile="$(jq -r --arg agent "$agent" '.agents[$agent].profile' "$policy")"
+  deployed_profile="$(yq eval-all -r 'select(.kind == "Agent") | .spec.profile.agent' "$manifest")"
+  [ "$declared_profile" = "$deployed_profile" ] || {
+    echo "routable agent $agent profile does not match its deployment" >&2
+    exit 1
+  }
+
+  declared_login="$(jq -r --arg agent "$agent" '.agents[$agent].login' "$policy")"
+  deployed_login="$(yq eval-all -r 'select(.kind == "Agent") | .spec.forge.username' "$manifest")"
+  [ "$declared_login" = "$deployed_login" ] || {
+    echo "routable agent $agent login does not match its deployment" >&2
+    exit 1
+  }
+
+  for denied_capability in merge push-protected; do
+    yq -e ".rules.agent-identities.$agent.\"may-not\"[] | select(. == \"$denied_capability\")" \
+      "$root/governance/sdlc-baseline.yaml" >/dev/null
+    if yq -e ".rules.agent-identities.$agent.may[] | select(. == \"$denied_capability\")" \
+      "$root/governance/sdlc-baseline.yaml" >/dev/null 2>&1; then
+      echo "routable agent $agent may not be granted $denied_capability" >&2
+      exit 1
+    fi
+  done
+done
+
+printf 'factory policy valid: %s\n' "$policy"
