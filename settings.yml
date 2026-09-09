@@ -12,4 +12,4 @@ default_harness: pi
 workflows: [software-factory]
 sources:
   - github: ai-outfitter/community-profiles
-    ref: v1.9.0
+    ref: f3ddb90a3ddf8d8675f1633de59c18daee42d416

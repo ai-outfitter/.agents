@@ -11,9 +11,6 @@ spec:
     - name: ai-outfitter-agents
       github: ai-outfitter/.agents
       revision: __REVISION__
-    - name: community-profiles
-      github: ai-outfitter/community-profiles
-      revision: 0bea9d16b103972a6612a9542b46f9ee096064cd
 ---
 apiVersion: aioutfitter.com/v1alpha1
 kind: Agent
@@ -26,7 +23,7 @@ spec:
     agent: luce-ai-outfitter
     harness: pi
   credentialSecretName: agent-credentials
-  image: ghcr.io/ai-outfitter/outfitter:1.16.0
+  image: ghcr.io/ai-outfitter/outfitter:1.16.2
   catalogSync:
     enabled: true
   taskPlane:
