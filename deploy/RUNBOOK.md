@@ -72,8 +72,14 @@ The required live contract is:
 | Source subtree | Kubernetes target | Keys |
 | --- | --- | --- |
 | Organization model | `org-outfitter/organization-credentials` | `default.SPARK_AUTHORIZATION` |
-| Luce | `agent-outfitter-luce/agent-credentials` | `GITHUB_NOTIFY_TOKEN`, `GITHUB_PERSONAL_ACCESS_TOKEN`, `GITHUB_USER`, `SPARK_AUTHORIZATION`, `a2a-credentials.json` |
-| Vega | `agent-outfitter-vega/agent-credentials` | the same five keys |
+| Luce administrator input | `agent-outfitter-luce/agent-credentials` | `GITHUB_NOTIFY_TOKEN`, `GITHUB_PERSONAL_ACCESS_TOKEN`, `GITHUB_USER`, `a2a-credentials.json` |
+| Vega administrator input | `agent-outfitter-vega/agent-credentials` | the same four keys |
+
+Do not populate `SPARK_AUTHORIZATION` in either Agent Secret. Agent Operator
+inherits it from `default.SPARK_AUTHORIZATION`; a directly populated child key
+is an intentional per-Agent override and no longer follows organization-level
+rotation. After reconciliation, verify `SPARK_AUTHORIZATION` exists as an
+operator-reconciled postcondition in each Agent Secret.
 
 Verify key names without reading values:
 
@@ -100,6 +106,12 @@ and `kubectl explain agents.spec.profile.model`.
 Every Agent pins `ghcr.io/ai-outfitter/outfitter:1.16.0`. Managed catalog sync
 fetches the exact `.agents` and community-profiles revisions before startup;
 the task-plane init container then strictly exports `software-factory`.
+
+Protect the default branch in every repository the residents can modify. The
+ruleset must reject direct pushes from `luce-unsup` and `vega-unsup` and require
+the repository's CI and independent review gates. This forge-enforced rule is
+what makes the maintainer the only merge actor; the profile and token alone do
+not enforce it.
 
 Push the reviewed catalog to `main` and wait for the deploy workflow. Accept
 the deployment only when both Agents report `Ready=True`, their catalog source
