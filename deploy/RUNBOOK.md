@@ -59,110 +59,67 @@ mechanism, since it is shared with other tenants of this cluster.
 kubectl apply -f deploy/rbac.yaml
 ```
 
-## 4. Per-deployment secrets: two GitHub tokens each, for luce and vega
+## 4. Cluster credentials
 
-Luce and Vega are **shared-persona accounts** (`luce-unsup`, `vega-unsup`) —
-the same GitHub machine accounts other organizations' deployments of these
-personas also use. What is per organization is the **credential pair**, not
-the account: mint this deployment's own tokens, never reuse another
-deployment's.
+Credentials live directly in namespace-scoped Kubernetes Secrets. They are
+not backed up in this repository and no workflow creates or updates them.
+Provision or rotate them directly in the cluster through the administrator's
+normal secret-entry surface. Do not put credential values in this runbook,
+shell history, a GitHub Actions input, or a committed file.
 
-| Variable | Kind | Scope |
+The required live contract is:
+
+| Source subtree | Kubernetes target | Keys |
 | --- | --- | --- |
-| `GITHUB_NOTIFY_TOKEN` | **classic** PAT | `notifications`, and nothing else |
-| `GITHUB_PERSONAL_ACCESS_TOKEN` | fine-grained PAT | resource owner **`ai-outfitter`** only; selected repositories; Contents, Issues, and Pull requests read/write; Metadata read |
-| `GITHUB_USER` | — | the machine account's login |
-| `a2a-credentials.json` | random bearer document | Panopticon intake for this Agent only |
+| Organization model | `org-outfitter/organization-credentials` | `default.SPARK_AUTHORIZATION` |
+| Luce administrator input | `agent-outfitter-luce/agent-credentials` | `GITHUB_NOTIFY_TOKEN`, `GITHUB_PERSONAL_ACCESS_TOKEN`, `GITHUB_USER`, `a2a-credentials.json` |
+| Vega administrator input | `agent-outfitter-vega/agent-credentials` | the same four keys |
 
-**Why they stay two tokens.** `GET /notifications` accepts classic tokens
-only — a fine-grained PAT and an App installation token are both rejected
-with `403`. Collapsing to one classic token with `repo` would grant write
-access to code, collaborators, and webhooks on every repository the shared
-account can reach, in every organization it belongs to — classic scopes have
-no organization selector.
+Do not populate `SPARK_AUTHORIZATION` in either Agent Secret. Agent Operator
+inherits it from `default.SPARK_AUTHORIZATION`; a directly populated child key
+is an intentional per-Agent override and no longer follows organization-level
+rotation. After reconciliation, verify `SPARK_AUTHORIZATION` exists as an
+operator-reconciled postcondition in each Agent Secret.
 
-Each agent has one `agent-credentials` Secret for its GitHub identity. The
-Agent resource carries channel selection, organization filtering, polling, and
-event filters through the operator's typed `channels` and `github` fields:
+Verify key names without reading values:
 
 ```sh
-kubectl create namespace agent-outfitter-luce
-
-kubectl -n agent-outfitter-luce create secret generic agent-credentials \
-  --from-literal=GITHUB_NOTIFY_TOKEN='ghp_replace_with_the_classic_notifications_token' \
-  --from-literal=GITHUB_PERSONAL_ACCESS_TOKEN='github_pat_replace_with_the_fine_grained_token' \
-  --from-literal=GITHUB_USER='luce-unsup' \
-  --from-file=a2a-credentials.json=/secure/path/outfitter-luce-a2a.json
-
+kubectl -n org-outfitter get secret organization-credentials -o go-template='{{range $key, $_ := .data}}{{$key}}{{"\n"}}{{end}}'
+kubectl -n agent-outfitter-luce get secret agent-credentials -o go-template='{{range $key, $_ := .data}}{{$key}}{{"\n"}}{{end}}'
+kubectl -n agent-outfitter-vega get secret agent-credentials -o go-template='{{range $key, $_ := .data}}{{$key}}{{"\n"}}{{end}}'
 ```
 
-Repeat for `agent-outfitter-vega` with `vega-unsup`.
+Luce and Vega use separate organization-scoped GitHub credentials even though
+their machine-account identities are shared. `GITHUB_NOTIFY_TOKEN` is a
+classic token limited to `notifications`; `GITHUB_PERSONAL_ACCESS_TOKEN` is a
+fine-grained token owned by `ai-outfitter` with only repository Contents,
+Issues, Pull requests, and Metadata access. The A2A document is unique to each
+resident. Agent Operator inherits `default.SPARK_AUTHORIZATION` from the
+organization Secret into each resident as `SPARK_AUTHORIZATION`.
 
-Prefix the command with a space (with `HISTCONTROL=ignorespace` set), or
-`unset HISTFILE` first, so tokens do not land in shell history. Verify the
-keys landed without printing any value:
+## 5. Deploy and accept the residents
 
-```sh
-kubectl -n agent-outfitter-luce get secret agent-credentials -o jsonpath='{.data}' | jq -r 'keys[]'
-```
+Install Agent Operator `agent-operator-v0.15.1` before applying this catalog.
+Confirm the required API with `kubectl explain agents.spec.taskPlane.workflow`
+and `kubectl explain agents.spec.profile.model`.
 
-Confirm each account is assignable before relying on `assigned_issue` wakes:
+Every Agent pins `ghcr.io/ai-outfitter/outfitter:1.16.0`. Managed catalog sync
+fetches the exact `.agents` and community-profiles revisions before startup;
+the task-plane init container then strictly exports `software-factory`.
 
-```sh
-# 204 = assignable; 404 = not a collaborator on that repository.
-gh api -i "/repos/ai-outfitter/<repo>/assignees/<login>" 2>/dev/null | head -1
-```
+Protect the default branch in every repository the residents can modify. The
+ruleset must reject direct pushes from `luce-unsup` and `vega-unsup` and require
+the repository's CI and independent review gates. This forge-enforced rule is
+what makes the maintainer the only merge actor; the profile and token alone do
+not enforce it.
 
-Every machine account MUST enable an organization-approved secure 2FA method
-(authenticator app, GitHub Mobile, security key, or passkey). SMS-only or
-missing 2FA causes GitHub to return `403` for repository access even when the
-PAT itself is valid. Verify from the runtime with a read-only request before
-accepting the deployment; `/notifications` returning `200` is insufficient.
-
-Protect `main` on every repository Luce or Vega works, the same way as any
-other deployment of these personas — see the community-profiles catalog's
-own Luce documentation for the exact ruleset; the boundary is enforced by the
-forge, not by the token or the profile.
-
-## 5. Namespace, Secret, and image-pull setup — the rest of the checklist
-
-Install Agent Operator v0.13 before applying this catalog. Confirm the task
-plane field exists with `kubectl explain agents.spec.taskPlane.workflow`.
-
-Every Agent pins the same version-tagged public runtime,
-`ghcr.io/ai-outfitter/outfitter:1.16.0`. GitHub is reached through the hosted
-MCP endpoint (`github-hosted`), so the image needs no `github-mcp-server`. Do
-not use the moving `latest` tag or fall back to the operator's stock image. Managed catalog sync writes
-Outfitter's versioned source-state manifests for the exact revisions it
-fetches before the resident runtime starts.
-
-Create `secret/organization-credentials` once in namespace `org-outfitter`
-with `default.SPARK_AUTHORIZATION` set to the complete Basic Authorization
-header consumed by `models.json`. Agent Operator v0.13 inherits it into every
-member Agent as `SPARK_AUTHORIZATION`; never print it or store it in this
-repository.
-
-For each agent (`outfitter-luce`, `outfitter-vega`):
-
-1. Create the namespace `agent-<agent-name>` (the operator also creates it on
-   first apply via the Agent's owner reference, but creating it first lets
-   the Secret exist before the first deploy).
-2. Create `secret/agent-credentials` with the keys in the table above. The A2A
-   document is `{"credentials":[{"token":"<random>","principal":"panopticon"}]}`.
-   Give Panopticon the same bearer through its private credential store. Do not
-   add `OPENAI_API_KEY` or a directly managed `SPARK_AUTHORIZATION`.
-3. Apply this catalog once (`workflow_dispatch`, or push to `main`).
-   `catalogSync.enabled` runs managed `outfitter sync` before the resident
-   runtime, and `taskPlane.workflow` strictly exports `software-factory` before
-   startup. Wait for `Ready` with the expected resolved revision, then assign
-   one test issue and request one cross-resident review. The author produces a
-   tested pull request, the other resident submits `REQUEST_CHANGES` or
-   `APPROVE`, and a maintainer owns merge.
-
-After reconciliation, each `agent-credentials` Secret MUST contain
-`SPARK_AUTHORIZATION` inherited from the organization and the administrator
-supplied `a2a-credentials.json`. Channel configuration MUST resolve from the
-typed Agent fields.
+Push the reviewed catalog to `main` and wait for the deploy workflow. Accept
+the deployment only when both Agents report `Ready=True`, their catalog source
+revisions match the merge commit, and their runtime pods are available. Then
+exercise one issue assignment and one cross-resident review. The assigned
+resident must produce a tested pull request, the other resident must submit an
+independent verdict on the current head, and a maintainer remains the only
+merge actor.
 
 ## Failure modes worth recognising
 

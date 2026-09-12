@@ -12,4 +12,7 @@ default_harness: pi
 workflows: [software-factory]
 sources:
   - github: ai-outfitter/community-profiles
-    ref: v1.9.0
+    # Prefer the reviewed release tag. The operator syncs this transitive
+    # source from the .agents catalog; do not also list it in Organization,
+    # because duplicate repository entries make strict sync ambiguous.
+    ref: v1.10.0

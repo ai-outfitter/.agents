@@ -7,13 +7,13 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   follow across the org's repositories.
 - [`settings.yml`](settings.yml) — org-default Outfitter settings: harness and
   the pinned community-profiles catalog source.
-- [`agents/luce-ai-outfitter`](agents/luce-ai-outfitter/agent.md) — the org's
-  resident agent: inherits the canonical `luce` profile from the pinned
-  community catalog, then adds this organization's credential context. Luce
-  implements assigned issues and independently reviews pull requests.
-- [`agents/vega-ai-outfitter`](agents/vega-ai-outfitter/agent.md) — the org's
-  Vega resident: composes the community `engineer` with the agent-operator pod
-  environment and adds this organization's credential context.
+- `luce` and `vega` come directly from the release-tagged
+  [community-profiles](https://github.com/ai-outfitter/community-profiles)
+  source declared by this catalog. This catalog does not fork or rename either
+  persona.
+- The community profiles supply Channels, task-plane tools, and hosted GitHub
+  access. Each deployment selects its organization-owned model through the
+  Agent profile without forking or renaming the persona.
 - Drago (research engineer) is planned but not yet deployed.
 - More shared contributor agents and skills land here as they emerge; broader
   catalogs live in
