@@ -93,7 +93,7 @@ organization Secret into each resident as `SPARK_AUTHORIZATION`.
 
 ## 5. Deploy and accept the residents
 
-Install Agent Operator `agent-operator-v0.15.0` before applying this catalog.
+Install Agent Operator `agent-operator-v0.15.1` before applying this catalog.
 Confirm the required API with `kubectl explain agents.spec.taskPlane.workflow`
 and `kubectl explain agents.spec.profile.model`.
 
