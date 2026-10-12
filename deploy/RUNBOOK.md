@@ -93,13 +93,24 @@ Luce and Vega use separate organization-scoped GitHub credentials even though
 their machine-account identities are shared. `GITHUB_NOTIFY_TOKEN` is a
 classic token limited to `notifications`; `GITHUB_PERSONAL_ACCESS_TOKEN` is a
 fine-grained token owned by `ai-outfitter` with only repository Contents,
-Issues, Pull requests, and Metadata access. The A2A document is unique to each
-resident. Agent Operator inherits `default.SPARK_AUTHORIZATION` from the
-organization Secret into each resident as `SPARK_AUTHORIZATION`.
+Issues, Pull requests, Actions, Commit statuses, and Metadata access. Verify
+the token can read the target repository, PR diff/source, the exact-head Actions
+run and job, and job logs before assigning review. GitHub's check-runs API may
+still return 403 even when Actions and logs are readable; report that gap
+explicitly rather than treating a pending combined commit status as CI proof.
+The A2A document is unique to each resident. Agent Operator inherits
+`default.SPARK_AUTHORIZATION` into each resident for compatibility, but their
+selected `outfitter/gpt-6-luna` model uses the loopback OIDC inference relay.
 
 ## 5. Deploy and accept the residents
 
-Install Agent Operator `agent-operator-v0.15.2` before applying this catalog.
+Install an Agent Operator build that renders an Agent's selected
+`outfitter/<model>` into the generated Pi `models.json` before applying this
+catalog (Agent Operator PR #102 introduces that behavior). The operator-owned
+file at `/workspace/.agents/models.json` defines the resident's `outfitter`
+provider; the catalog-root `models.json` is not the running resident's provider
+file. Confirm a new A2A task records `outfitter/gpt-6-luna` rather than relying
+only on the gateway target's advertised model.
 Confirm the required API with `kubectl explain agents.spec.taskPlane.workflow`
 and `kubectl explain agents.spec.profile.model`.
 
