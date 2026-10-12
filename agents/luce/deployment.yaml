@@ -22,7 +22,7 @@ spec:
   profile:
     agent: luce
     harness: pi
-    model: dgx-spark/GLM-5.3-Flash-EXL3
+    model: outfitter/gpt-6-luna
   credentialSecretName: agent-credentials
   image: ghcr.io/ai-outfitter/outfitter:1.16.0
   catalogSync:
