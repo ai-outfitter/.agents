@@ -30,7 +30,7 @@ spec:
   forge:
     username: vega-unsup
   # Disable notification sources; the A2A task endpoint stays available.
-  channels: [off]
+  channels: ["off"]
   setup:
     - name: git-https-credential
       script: |
