@@ -5,5 +5,16 @@
     "outputGuard": true,
     "sampling": false
   },
-  "mcpServers": {}
+  "mcpServers": {
+    "github-hosted": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}",
+        "X-MCP-Toolsets": "all"
+      },
+      "requestTimeoutMs": 30000,
+      "lifecycle": "eager"
+    }
+  }
 }

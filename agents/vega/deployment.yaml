@@ -20,22 +20,17 @@ spec:
   memberships:
     - organization: __ORG__
   profile:
-    agent: vega
+    agent: vega-workflow
     harness: pi
     model: outfitter/gpt-6-luna
   credentialSecretName: agent-credentials
   image: ghcr.io/ai-outfitter/outfitter:1.16.0
   catalogSync:
     enabled: true
-  taskPlane:
-    workflow: software-factory
   forge:
     username: vega-unsup
-  channels: [github]
-  github:
-    notifyOrgs: [ai-outfitter]
-    pollMs: 60000
-    filters: [mention, assigned_issue, assigned_pr, review_requested, author]
+  # Disable notification sources; the A2A task endpoint stays available.
+  channels: [off]
   setup:
     - name: git-https-credential
       script: |
