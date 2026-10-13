@@ -20,7 +20,7 @@ spec:
   memberships:
     - organization: __ORG__
   profile:
-    agent: vega
+    agent: vega-workflow
     harness: pi
     model: outfitter/gpt-6-luna
   credentialSecretName: agent-credentials
