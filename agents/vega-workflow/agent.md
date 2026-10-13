@@ -1,5 +1,5 @@
 ---
-name: vega
+name: vega-workflow
 label: Vega
 description: Resident agent executing workflow node tasks.
 tools:
