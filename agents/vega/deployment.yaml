@@ -27,8 +27,6 @@ spec:
   image: ghcr.io/ai-outfitter/outfitter:1.16.0
   catalogSync:
     enabled: true
-  taskPlane:
-    workflow: software-factory
   forge:
     username: vega-unsup
   # Disable notification sources; the A2A task endpoint stays available.
