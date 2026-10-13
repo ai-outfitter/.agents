@@ -31,11 +31,8 @@ spec:
     workflow: software-factory
   forge:
     username: vega-unsup
-  channels: [github]
-  github:
-    notifyOrgs: [ai-outfitter]
-    pollMs: 60000
-    filters: [mention, assigned_issue, assigned_pr, review_requested, author]
+  # Disable notification sources; the A2A task endpoint stays available.
+  channels: [off]
   setup:
     - name: git-https-credential
       script: |
