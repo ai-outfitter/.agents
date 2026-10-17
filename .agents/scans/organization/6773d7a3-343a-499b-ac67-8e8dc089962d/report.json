@@ -1,0 +1,412 @@
+{
+  "model": "readiness-model/v1alpha1",
+  "generatedAt": "2026-08-27T15:39:57.751Z",
+  "scope": {
+    "kind": "installation"
+  },
+  "scopeLabel": "installation",
+  "repositories": [
+    {
+      "repository": {
+        "owner": "ai-outfitter",
+        "name": ".agents",
+        "fullName": "ai-outfitter/.agents",
+        "nodeId": "R_kgDOTU5-UQ",
+        "visibility": "public",
+        "defaultBranch": "main",
+        "activityAt": "2026-08-27T02:32:02Z",
+        "archived": false,
+        "disabled": false
+      },
+      "revision": {
+        "requested": "main",
+        "resolved": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+      },
+      "capabilities": [
+        {
+          "capability": "repository-context",
+          "title": "Repository context",
+          "description": "Agents can find repository-specific instructions for working safely in this codebase.",
+          "nextAction": "Add a readable AGENTS.md or CLAUDE.md file at the repository root.",
+          "dimension": "context",
+          "state": "detected",
+          "requiredForRung": 1,
+          "requiredState": "detected",
+          "evidence": [
+            {
+              "artifact": "agent-instructions",
+              "repository": "ai-outfitter/.agents",
+              "path": "AGENTS.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "agent-instructions",
+              "repository": "ai-outfitter/.agents",
+              "path": "CLAUDE.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            }
+          ],
+          "limitations": []
+        },
+        {
+          "capability": "accountable-ownership",
+          "title": "Accountable ownership",
+          "description": "The repository identifies the people or teams accountable for reviewing changes.",
+          "nextAction": "Add a readable CODEOWNERS file at the repository root or under .github/.",
+          "dimension": "guardrails",
+          "state": "unknown",
+          "requiredForRung": 1,
+          "requiredState": "detected",
+          "evidence": [],
+          "limitations": []
+        },
+        {
+          "capability": "shared-agent-context",
+          "title": "Shared agent context",
+          "description": "Agent configuration is committed where collaborators and automation can use the same context.",
+          "nextAction": "Commit shared agent configuration under .agents/ or agents/.",
+          "dimension": "context",
+          "state": "detected",
+          "requiredForRung": 2,
+          "requiredState": "detected",
+          "evidence": [
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/luce/agent.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/luce/deployment.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/outfitter-bot/agent.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/outfitter-bot/deployment.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/vega/agent.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/vega/deployment.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            }
+          ],
+          "limitations": []
+        },
+        {
+          "capability": "named-workflow-responsibility",
+          "title": "Named workflow responsibility",
+          "description": "A committed workflow names an automated responsibility that agents can perform consistently.",
+          "nextAction": "Add a named YAML workflow under .github/workflows/ that defines an agent responsibility.",
+          "dimension": "workflow",
+          "state": "detected",
+          "requiredForRung": 2,
+          "requiredState": "detected",
+          "evidence": [
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": ".github/workflows/deploy.yml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": ".github/workflows/release-please.yml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": "workflows/feature-request.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": "workflows/vulnerability-fix.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            }
+          ],
+          "limitations": []
+        },
+        {
+          "capability": "agent-identity",
+          "title": "Agent identity",
+          "description": "At least one committed agent profile gives an automated actor a stable identity and role.",
+          "nextAction": "Define a named agent profile under .agents/agents/ or agents/.",
+          "dimension": "identity-and-authority",
+          "state": "detected",
+          "requiredForRung": 2,
+          "requiredState": "detected",
+          "evidence": [
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/luce/agent.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/luce/deployment.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/outfitter-bot/agent.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/outfitter-bot/deployment.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/vega/agent.md",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "catalog",
+              "repository": "ai-outfitter/.agents",
+              "path": "agents/vega/deployment.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            }
+          ],
+          "limitations": []
+        },
+        {
+          "capability": "scoped-authority",
+          "title": "Scoped authority",
+          "description": "Committed settings state what agents may do instead of leaving their authority implicit.",
+          "nextAction": "Declare agent permissions or authority in a readable .agents/settings.yml, JSON, or TOML file.",
+          "dimension": "identity-and-authority",
+          "state": "unknown",
+          "requiredForRung": 2,
+          "requiredState": "detected",
+          "evidence": [],
+          "limitations": []
+        },
+        {
+          "capability": "automated-agent-workflow",
+          "title": "Exercised agent workflow",
+          "description": "An agent workflow has run successfully, proving that the declared automation works in practice.",
+          "nextAction": "Run the agent workflow successfully and retain evidence of a successful run from the last 90 days.",
+          "dimension": "workflow",
+          "state": "detected",
+          "requiredForRung": 3,
+          "requiredState": "exercised",
+          "evidence": [
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": ".github/workflows/deploy.yml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": ".github/workflows/release-please.yml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": "workflows/feature-request.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            },
+            {
+              "artifact": "workflow",
+              "repository": "ai-outfitter/.agents",
+              "path": "workflows/vulnerability-fix.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            }
+          ],
+          "limitations": [
+            "No successful exercise within the 90-day evidence window was collected."
+          ]
+        },
+        {
+          "capability": "automated-review",
+          "title": "Exercised automated review",
+          "description": "Automated review has run successfully on a real change, not merely been declared in configuration.",
+          "nextAction": "Run an automated review workflow successfully on a real change and retain evidence from the last 90 days.",
+          "dimension": "improvement",
+          "state": "unknown",
+          "requiredForRung": 3,
+          "requiredState": "exercised",
+          "evidence": [],
+          "limitations": []
+        },
+        {
+          "capability": "controlled-change-landing",
+          "title": "Controlled change landing",
+          "description": "Default-branch controls enforce independent review before changes land.",
+          "nextAction": "Require pull requests, CODEOWNERS review, and an independent required approval or check on the default branch.",
+          "dimension": "auditability",
+          "state": "detected",
+          "requiredForRung": 3,
+          "requiredState": "enforced",
+          "evidence": [
+            {
+              "artifact": "governance",
+              "repository": "ai-outfitter/.agents",
+              "path": "governance/sdlc-baseline.yaml",
+              "revision": "8b8cf206a105d3bab8e45a3d91bf546dfcb2390b"
+            }
+          ],
+          "limitations": [
+            "Mutable branch and review enforcement was not collected by the shallow observation."
+          ]
+        }
+      ],
+      "coverage": [
+        {
+          "area": "metadata",
+          "status": "complete"
+        },
+        {
+          "area": "revision",
+          "status": "complete"
+        },
+        {
+          "area": "manifest",
+          "status": "complete"
+        },
+        {
+          "area": "content",
+          "status": "complete"
+        }
+      ],
+      "rung": 0
+    }
+  ],
+  "dimensions": [
+    {
+      "dimension": "context",
+      "state": "detected",
+      "capabilities": [
+        "repository-context",
+        "shared-agent-context"
+      ]
+    },
+    {
+      "dimension": "workflow",
+      "state": "detected",
+      "capabilities": [
+        "named-workflow-responsibility",
+        "automated-agent-workflow"
+      ]
+    },
+    {
+      "dimension": "identity-and-authority",
+      "state": "unknown",
+      "capabilities": [
+        "agent-identity",
+        "scoped-authority"
+      ]
+    },
+    {
+      "dimension": "guardrails",
+      "state": "unknown",
+      "capabilities": [
+        "accountable-ownership"
+      ]
+    },
+    {
+      "dimension": "auditability",
+      "state": "detected",
+      "capabilities": [
+        "controlled-change-landing"
+      ]
+    },
+    {
+      "dimension": "improvement",
+      "state": "unknown",
+      "capabilities": [
+        "automated-review"
+      ]
+    }
+  ],
+  "rungs": [
+    {
+      "rung": 0,
+      "name": "Observed",
+      "status": "satisfied",
+      "missingCapabilities": []
+    },
+    {
+      "rung": 1,
+      "name": "Assisted",
+      "status": "not-satisfied",
+      "missingCapabilities": [
+        "accountable-ownership"
+      ]
+    },
+    {
+      "rung": 2,
+      "name": "Delegated",
+      "status": "not-satisfied",
+      "missingCapabilities": [
+        "accountable-ownership",
+        "scoped-authority"
+      ]
+    },
+    {
+      "rung": 3,
+      "name": "Automated with guardrails",
+      "status": "not-satisfied",
+      "missingCapabilities": [
+        "accountable-ownership",
+        "scoped-authority",
+        "automated-agent-workflow",
+        "automated-review",
+        "controlled-change-landing"
+      ]
+    },
+    {
+      "rung": 4,
+      "name": "Measured",
+      "status": "unavailable",
+      "missingCapabilities": []
+    },
+    {
+      "rung": 5,
+      "name": "Adaptive",
+      "status": "unavailable",
+      "missingCapabilities": []
+    }
+  ],
+  "currentRung": 0,
+  "reviewedRung": null,
+  "coverage": [
+    {
+      "area": "scope",
+      "status": "complete"
+    }
+  ],
+  "limitations": [
+    "This is an installation-scope assessment, not a complete organization claim.",
+    "Rungs 4 and 5 are visible roadmap states and cannot be awarded by readiness-model/v1alpha1."
+  ]
+}
