@@ -61,29 +61,24 @@ ai-outfitter organization.
 
 ## Resident agents
 
-One persona per organization: this catalog declares a short deployment prefix
-(`organization: outfitter` in `clusters.yaml`), and
-every Agent it deploys carries that prefix in its cluster-scoped name
-(`outfitter-luce`, not bare `luce`) so it can never collide with another
-catalog's deployment of a shared persona on the same cluster.
+The canonical residents are owned by `Unsupervisedcom/.agents`. Luce and Vega
+serve both `Unsupervisedcom` and `ai-outfitter` using one deployed identity each.
+The nonprod residents keep `unsupervised` first in their memberships and
+`outfitter` second; primary catalog and credential inheritance stay Unsupervised.
+Each organization keeps its own forge gateway, repository authorization and
+subscription filters. Enterprise membership does not expand permissions.
 
-| Agent | Role | State |
-| --- | --- | --- |
-| Luce | Resident engineer with planning, prose, and requirements-review emphasis | deployed |
-| Vega | Resident engineer with correctness, failure-mode, and test-review emphasis | deployed |
-| Drago | Research engineer | planned, not deployed |
+This catalog supplies contributor configuration and profiles but deploys no
+Agents: `clusters.yaml` is empty and its former deploy workflow is an explanatory
+no-op. Local factory entries are unroutable and fall back to `needs-human` until
+canonical routing is configured; `planned` is the existing schema's inactive
+state, not an instruction to redeploy duplicate residents.
 
-Both residents implement assigned issues through pull requests and
-independently review the other author's current head. The author owns the
-feature branch, the reviewer owns `REQUEST_CHANGES` or `APPROVE`, and a
-maintainer owns merge.
-
-Luce and Vega are personas shared across organizations by GitHub account
-(`luce-unsup`, `vega-unsup`), but never by credential: each deployment holds
-its own token pair, scoped to this organization only. See
-[`deploy/RUNBOOK.md`](deploy/RUNBOOK.md) for deployment and bootstrap.
-`Unsupervisedcom/.agents` deployed this organization's agents as a guest on
-its shared cluster until this catalog's own CI/CD existed; it no longer does.
+Keep the `outfitter` Organization and its gateway configuration. Retiring duplicate
+Agents must not delete that Organization. Agent deletion is administrator work:
+the operator finalizer deletes the Agent namespace, including Secrets and PVCs,
+even when an orphan deletion policy is requested. Preserve the required data
+before deleting any `outfitter-*` Agent; catalog changes never delete it for you.
 
 ## Cross-repository handoff
 

@@ -11,8 +11,8 @@
     "luce": {
       "profile": "luce",
       "login": "luce-unsup",
-      "state": "deployed",
-      "routable": true,
+      "state": "planned",
+      "routable": false,
       "capabilities": ["triage", "implement", "review"],
       "specialties": ["planning", "requirements", "prose", "general-engineering"],
       "reviewerFallback": "vega"
@@ -20,8 +20,8 @@
     "vega": {
       "profile": "vega",
       "login": "vega-unsup",
-      "state": "deployed",
-      "routable": true,
+      "state": "planned",
+      "routable": false,
       "capabilities": ["implement", "review"],
       "specialties": ["correctness", "failure-modes", "testing", "general-engineering"],
       "reviewerFallback": "luce"

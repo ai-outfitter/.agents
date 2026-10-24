@@ -16,9 +16,14 @@ check-jsonschema --schemafile "$schema" "$policy" >/dev/null
 
 jq -e '
   .kind == "organization-factory/v1"
-  and (.agents[.coordinator.triager].state == "deployed")
-  and (.agents[.coordinator.triager].routable == true)
-  and (.agents[.coordinator.triager].capabilities | index("triage") != null)
+  and (
+    ([.agents[] | select(.routable)] | length) == 0
+    or (
+      (.agents[.coordinator.triager].state == "deployed")
+      and (.agents[.coordinator.triager].routable == true)
+      and (.agents[.coordinator.triager].capabilities | index("triage") != null)
+    )
+  )
   and (
     [
       .agents as $agents

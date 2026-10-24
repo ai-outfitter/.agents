@@ -9,8 +9,8 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   the pinned community-profiles catalog source.
 - `luce` and `vega` come directly from the release-tagged
   [community-profiles](https://github.com/ai-outfitter/community-profiles)
-  source declared by this catalog. This catalog does not fork or rename either
-  persona.
+  source declared by this catalog for contributor use. Canonical resident
+  deployment belongs to Unsupervisedcom/.agents.
 - The community profiles supply Channels, task-plane tools, and hosted GitHub
   access. Each deployment selects its organization-owned model through the
   Agent profile without forking or renaming the persona.
@@ -24,15 +24,20 @@ Org-wide agent configuration for the **ai-outfitter** organization: the shared
   `bin/validate-factory-policy` checks those invariants against the schema,
   cluster list, Agent manifests, and governance. Maintainer approval remains a merge gate.
 
-## Deploying this org's agents
+## Canonical residents
 
-`clusters.yaml`, `.github/workflows/deploy.yml`, and `deploy/` are this
-catalog's own CI/CD: a push to `main` deploys Luce and Vega to
-this organization's nonprod cluster. Each renders with this catalog's
-deployment prefix (`outfitter`) — `outfitter-luce` and `outfitter-vega` —
-never a shared object with another catalog's
-deployment of the same persona. See [`deploy/RUNBOOK.md`](deploy/RUNBOOK.md)
-for administrator bootstrap.
+`Unsupervisedcom/.agents` owns the canonical residents that serve both
+`Unsupervisedcom` and `ai-outfitter`. This catalog no longer deploys duplicate
+`outfitter-luce` or `outfitter-vega` Agents: `clusters.yaml` is empty and the
+former deploy workflow makes no cluster changes. Local factory routes remain
+unroutable with `needs-human` fallback until canonical routing is configured.
+The `planned` registry state is inactive, not a request to recreate duplicates.
+
+Keep the `outfitter` Organization and its forge gateway configuration so it can
+route to canonical residents with an `outfitter` membership. Retirement of the
+old Agents is a separate administrator operation: the operator finalizer deletes
+their namespaces and PVCs even with orphan propagation. Preserve required data
+before deletion. See [`deploy/RETIREMENT.md`](deploy/RETIREMENT.md).
 
 ## Using it
 
