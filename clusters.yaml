@@ -1,9 +1,8 @@
-# Which agents this catalog deploys, and the deployment prefix they render
-# under. `organization` renders `__ORG__`; each cluster deploys exactly the
-# agents listed for it.
+# Contributor catalog only. Canonical residents are deployed by
+# Unsupervisedcom/.agents with unsupervised as their primary membership and
+# outfitter second. Keep this list empty to prevent duplicate Agent recreation.
+# This does not delete existing Agents or the outfitter Organization/gateway.
 organization: outfitter
 clusters:
   nonprod:
-    agents:
-      - luce
-      - vega
+    agents: []

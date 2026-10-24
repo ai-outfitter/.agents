@@ -1,3 +1,7 @@
+> Historical bootstrap reference. Resident deployment from this catalog is
+> retired. Do not apply duplicate Agent manifests or restore the former deploy
+> role. Keep the outfitter Organization/gateway; follow [retirement](RETIREMENT.md).
+
 # Deploying the ai-outfitter fleet
 
 `clusters.yaml` names two agents on the `nonprod` cluster: `luce` and `vega`.
